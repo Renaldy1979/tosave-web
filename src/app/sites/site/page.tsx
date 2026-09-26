@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { CarCard } from "@/components/site/car-card";
 import { ButtonLink } from "@/components/ui/button";
-import { serieLogoUrl } from "@/lib/appwrite";
+import { serieLogoUrl } from "@/lib/storage-url";
 import { APP_URL } from "@/lib/env";
 import { loadFeaturedSeries, loadPublicStats, loadShowcase, type CarItem, type PublicFeaturedSerie, type PublicStats } from "@/lib/public-api";
 

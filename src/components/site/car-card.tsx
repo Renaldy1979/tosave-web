@@ -18,9 +18,9 @@ export function CarCard({ car, priority }: { car: CarItem; priority?: boolean })
           priority={priority}
           className="aspect-card rounded-t-lg transition-transform duration-slow group-hover:scale-[1.04]"
         />
-        {car.collector ? (
+        {car.toy ? (
           <span className="absolute top-2 left-2 inline-flex h-6 items-center rounded-xs bg-accent-soft px-2 font-mono text-caption text-accent">
-            #{car.collector}
+            {car.toy}
           </span>
         ) : null}
         {car.seriePosition ? (
@@ -34,10 +34,7 @@ export function CarCard({ car, priority }: { car: CarItem; priority?: boolean })
           {[car.brandName, car.year || null].filter(Boolean).join(" · ") || "—"}
         </p>
         <h3 className="line-clamp-2 text-body font-semibold text-fg">{car.title}</h3>
-        <div className="flex items-center justify-between gap-2 text-body-sm">
-          <span className="truncate text-fg-muted">{car.serieTitle}</span>
-          {car.toy ? <span className="shrink-0 font-mono text-fg-subtle">{car.toy}</span> : null}
-        </div>
+        <p className="truncate text-body-sm text-fg-muted">{car.serieTitle}</p>
       </div>
     </Link>
   );

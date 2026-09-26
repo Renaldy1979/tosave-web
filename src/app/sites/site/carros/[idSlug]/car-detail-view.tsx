@@ -26,9 +26,9 @@ export function CarDetailView({ car }: { car: PublicCarDetail }) {
             priority
             className="aspect-card rounded-lg shadow-card"
           />
-          {car.collector ? (
+          {car.toy ? (
             <span className="absolute top-3 left-3 inline-flex h-7 items-center rounded-xs bg-accent-soft px-2.5 font-mono text-body-sm text-accent">
-              #{car.collector}
+              {car.toy}
             </span>
           ) : null}
           {car.seriePosition ? (
@@ -45,7 +45,6 @@ export function CarDetailView({ car }: { car: PublicCarDetail }) {
           <h1 className="mt-2 font-display text-display-lg text-fg italic">{car.title}</h1>
           <Link href={`/vitrine?serieId=${car.serie.id}&serieName=${encodeURIComponent(car.serie.title)}`} className="mt-2 inline-block text-body text-fg-muted hover:text-primary-text">
             {car.serie.title}
-            {car.toy ? <span className="ml-2 font-mono text-body-sm text-fg-subtle">{car.toy}</span> : null}
           </Link>
 
           {car.description.trim() ? <p className="mt-5 text-body text-fg-muted">{car.description.trim()}</p> : null}

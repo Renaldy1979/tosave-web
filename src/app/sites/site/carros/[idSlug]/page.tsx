@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { carImageUrl } from "@/lib/appwrite";
+import { carImageUrl } from "@/lib/storage-url";
 import { loadPublicCar, PublicApiError } from "@/lib/public-api";
 import { slugify } from "@/lib/slug";
 import { CarDetailView } from "./car-detail-view";
