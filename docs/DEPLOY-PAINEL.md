@@ -34,7 +34,9 @@ No DNS da Hostinger, com o IP da VPS `179.199.139.63` e TTL 300:
 1. Crie um serviço **App** chamado `tosave-web` no mesmo projeto:
    - fonte: `Renaldy1979/tosave-web`, branch `main`;
    - build: `Dockerfile`.
-2. **Variáveis:** nenhuma é obrigatória, porque os padrões do `Dockerfile` já apontam para produção (API, Appwrite e `app.tosave.cloud`). Os `NEXT_PUBLIC_*` entram no build. Se precisar trocar algum, use os **Build Args**.
+2. **Variáveis:** defina **`PORT=3000`**. Sem ela, o EasyPanel injeta `PORT=80`, o Next.js sobe na 80, o teste de saúde na 3000 falha e o container reinicia em loop (status amarelo).
+   - O resto já vem do `Dockerfile`, que aponta para produção (API, Appwrite e `app.tosave.cloud`).
+   - Os `NEXT_PUBLIC_*` entram no build. Se precisar trocar algum, use os **Build Args**.
 3. **Domínios**, todos com HTTPS e porta interna **3000**:
    - `admin.tosave.cloud`;
    - `app.tosave.cloud`;
