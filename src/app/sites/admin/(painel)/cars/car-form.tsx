@@ -426,7 +426,7 @@ export function CarForm({ car: initialCar, brands, attributes }: CarFormProps) {
                 year={values.year}
                 serie={values.serie?.name ?? null}
                 toy={values.toy}
-                collector={values.collector}
+                code={values.toy ?? ""}
                 position={values.seriePosition}
               />
               <p className="flex items-center gap-1.5 text-body-sm text-fg-muted">
@@ -502,7 +502,7 @@ function PreviewCard({
   year,
   serie,
   toy,
-  collector,
+  code,
   position,
 }: {
   imageSrc: string | null;
@@ -511,7 +511,7 @@ function PreviewCard({
   year: string;
   serie: string | null;
   toy: string;
-  collector: string;
+  code: string;
   position: string;
 }) {
   return (
@@ -525,9 +525,9 @@ function PreviewCard({
             <Car size={48} strokeWidth={1.5} className="text-fg-subtle/40" aria-hidden />
           </div>
         )}
-        {collector.trim() ? (
+        {code.trim() ? (
           <span className="absolute top-2 left-2 inline-flex h-6 items-center rounded-xs bg-accent-soft px-2 font-mono text-caption text-accent">
-            #{collector.trim()}
+            {code.trim()}
           </span>
         ) : null}
         {position.trim() ? (
