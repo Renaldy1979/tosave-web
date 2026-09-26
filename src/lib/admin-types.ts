@@ -49,9 +49,18 @@ export type AdminSerie = {
 
 export type SerieInput = { name: string; description?: string | null; isDefault?: boolean };
 
-export type AdminBrand = { id: string; name: string; active: boolean; carCount: number };
+export type BrandState = "ativa" | "descontinuada" | "em_analise";
 
-export type BrandInput = { name: string; active?: boolean };
+export type AdminBrand = {
+  id: string;
+  name: string;
+  state: BrandState;
+  active: boolean;
+  imageFileId: string | null;
+  carCount: number;
+};
+
+export type BrandInput = { name: string; state?: BrandState; active?: boolean };
 
 export type AdminAttribute = { id: string; title: string; description: string | null; carCount: number };
 

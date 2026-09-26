@@ -7,22 +7,27 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/admin-shell";
 import { KebabMenu } from "@/components/admin/kebab-menu";
 import { SearchInput } from "@/components/admin/search-input";
+import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/feedback";
 import { NativeSelect } from "@/components/ui/select";
-import type { AdminBrand } from "@/lib/admin-types";
+import { SegmentedControl } from "@/components/ui/segmented";
+import type { AdminBrand, BrandState } from "@/lib/admin-types";
 import { api, errorMessage } from "@/lib/api";
+import { brandLogoUrl } from "@/lib/appwrite";
+import { BRAND_STATE_META, BRAND_STATE_OPTIONS } from "@/lib/brand-state";
 import { invalidateCatalog } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { useApi } from "@/lib/use-api";
 
-type Visibility = "" | "visible" | "hidden";
+type Visibility = "all" | "visible" | "hidden";
 
 export function BrandsList() {
   const { data, error, loading, reload, setData } = useApi("brands-full", (signal) => api<AdminBrand[]>("/admin/brands", { signal }));
   const [q, setQ] = useState("");
-  const [visibility, setVisibility] = useState<Visibility>("");
+  const [state, setState] = useState<BrandState | "">("");
+  const [visibility, setVisibility] = useState<Visibility>("all");
   const [pendingDelete, setPendingDelete] = useState<AdminBrand | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -32,11 +37,12 @@ export function BrandsList() {
     const term = q.trim().toLowerCase();
     return data.filter((b) => {
       if (term && !b.name.toLowerCase().includes(term)) return false;
+      if (state && b.state !== state) return false;
       if (visibility === "visible" && !b.active) return false;
       if (visibility === "hidden" && b.active) return false;
       return true;
     });
-  }, [data, q, visibility]);
+  }, [data, q, state, visibility]);
 
   async function toggleVisible(brand: AdminBrand) {
     const next = !brand.active;
@@ -86,18 +92,25 @@ export function BrandsList() {
         }
       />
 
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
         <SearchInput className="flex-1" label="Buscar marca" placeholder="Buscar marca" value={q} onChange={setQ} />
-        <NativeSelect
-          aria-label="Visibilidade"
-          className="sm:w-48"
-          value={visibility}
-          onChange={(e) => setVisibility(e.target.value as Visibility)}
-        >
-          <option value="">Todas</option>
-          <option value="visible">Visíveis</option>
-          <option value="hidden">Ocultas</option>
+        <NativeSelect aria-label="Situação" className="sm:w-48" value={state} onChange={(e) => setState(e.target.value as BrandState | "")}>
+          <option value="">Todas as situações</option>
+          {BRAND_STATE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </NativeSelect>
+        <SegmentedControl
+          value={visibility}
+          onChange={setVisibility}
+          options={[
+            { value: "all", label: "Todas" },
+            { value: "visible", label: "Visíveis" },
+            { value: "hidden", label: "Ocultas" },
+          ]}
+        />
       </div>
 
       {error ? (
@@ -157,6 +170,8 @@ export function BrandsList() {
 
 function BrandTile({ brand, onToggle, onDelete }: { brand: AdminBrand; onToggle: () => void; onDelete: () => void }) {
   const router = useRouter();
+  const logo = brandLogoUrl(brand.imageFileId);
+  const stateMeta = BRAND_STATE_META[brand.state];
   return (
     <div
       role="link"
@@ -166,7 +181,12 @@ function BrandTile({ brand, onToggle, onDelete }: { brand: AdminBrand; onToggle:
       className={cn("cursor-pointer rounded-lg bg-surface p-4 shadow-card transition duration-fast", !brand.active && "opacity-60")}
     >
       <div className="mb-3 flex aspect-square items-center justify-center rounded-md bg-surface-2 p-4">
-        <Tag size={28} strokeWidth={1.5} className="text-fg-subtle" aria-hidden />
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- preview do Appwrite
+          <img src={logo} alt="" className="size-full object-contain" />
+        ) : (
+          <Tag size={28} strokeWidth={1.5} className="text-fg-subtle" aria-hidden />
+        )}
       </div>
       <div className="flex items-start justify-between gap-1">
         <p className="min-w-0 flex-1 truncate font-semibold text-fg">{brand.name}</p>
@@ -181,17 +201,16 @@ function BrandTile({ brand, onToggle, onDelete }: { brand: AdminBrand; onToggle:
           ]}
         />
       </div>
-      <p className="mt-1 flex items-center gap-1 text-caption text-fg-subtle">
+      <div className="mt-1.5 flex items-center gap-1.5">
+        <Badge variant={stateMeta.variant} icon={stateMeta.icon} size="sm">
+          {stateMeta.label}
+        </Badge>
         {brand.active ? (
-          <>
-            <Eye size={13} aria-hidden /> Visível
-          </>
+          <Eye size={13} className="text-fg-muted" aria-label="Visível" />
         ) : (
-          <>
-            <EyeOff size={13} aria-hidden /> Oculta
-          </>
+          <EyeOff size={13} className="text-fg-subtle" aria-label="Oculta" />
         )}
-      </p>
+      </div>
     </div>
   );
 }

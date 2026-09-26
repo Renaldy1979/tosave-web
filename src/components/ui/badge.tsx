@@ -24,6 +24,8 @@ export const badgeVariants = cva("inline-flex items-center gap-1 rounded-xs font
   defaultVariants: { variant: "neutral", size: "md" },
 });
 
+export type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
+
 type BadgeProps = HTMLAttributes<HTMLSpanElement> &
   VariantProps<typeof badgeVariants> & { icon?: LucideIcon; dot?: string };
 

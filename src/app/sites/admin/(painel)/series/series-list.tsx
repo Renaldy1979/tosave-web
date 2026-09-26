@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/feedback";
+import { SegmentedControl } from "@/components/ui/segmented";
 import type { AdminSerie } from "@/lib/admin-types";
 import { api, errorMessage } from "@/lib/api";
 import { serieLogoUrl } from "@/lib/appwrite";
@@ -65,28 +66,15 @@ export function SeriesList() {
       />
 
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex h-9 shrink-0 items-center gap-1 self-start rounded-md bg-surface-2 p-1">
-          <button
-            type="button"
-            onClick={() => setParam({ tab: "all" })}
-            className={cn(
-              "h-7 rounded-sm px-3 text-body-sm transition duration-fast",
-              tab === "all" ? "bg-surface-3 text-fg shadow-card" : "text-fg-muted"
-            )}
-          >
-            Todas
-          </button>
-          <button
-            type="button"
-            onClick={() => setParam({ tab: "featured" })}
-            className={cn(
-              "h-7 rounded-sm px-3 text-body-sm transition duration-fast",
-              tab === "featured" ? "bg-surface-3 text-fg shadow-card" : "text-fg-muted"
-            )}
-          >
-            Em destaque{featuredCount.data !== undefined ? ` (${featuredCount.data})` : ""}
-          </button>
-        </div>
+        <SegmentedControl
+          className="shrink-0 self-start"
+          value={tab}
+          onChange={(v) => setParam({ tab: v })}
+          options={[
+            { value: "all", label: "Todas" },
+            { value: "featured", label: `Em destaque${featuredCount.data !== undefined ? ` (${featuredCount.data})` : ""}` },
+          ]}
+        />
         <SearchInput className="sm:w-80" label="Buscar série" placeholder="Buscar série" value={q} onChange={(v) => setParam({ q: v.trim() })} />
       </div>
 

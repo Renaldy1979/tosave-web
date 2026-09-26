@@ -14,6 +14,7 @@ export const APPWRITE_PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID |
 
 export const BUCKET_CAR_IMAGES = "car-images";
 export const BUCKET_SERIES_LOGOS = "series-logos";
+export const BUCKET_BRAND_LOGOS = "brand-logos";
 
 /** Endereço do app web para colecionadores (link "Ver site"). */
 export const APP_URL = trim(process.env.NEXT_PUBLIC_APP_URL || "https://app.tosave.cloud");
