@@ -8,6 +8,9 @@ import { serieLogoUrl } from "@/lib/appwrite";
 import { APP_URL } from "@/lib/env";
 import { loadFeaturedSeries, loadPublicStats, loadShowcase, type CarItem, type PublicFeaturedSerie, type PublicStats } from "@/lib/public-api";
 
+// Renderiza a cada visita: a curadoria da vitrine no painel aparece na hora (o ISR não renovava no container).
+export const dynamic = "force-dynamic";
+
 const STEPS: { icon: LucideIcon; title: string; description: string }[] = [
   {
     icon: Car,
@@ -33,9 +36,9 @@ const MIN_MEMBERS_TO_SHOW = 100;
 
 async function loadHomeData() {
   const [stats, showcase, series] = await Promise.all([
-    loadPublicStats().catch((): PublicStats | null => null),
-    loadShowcase({ limit: 8 }, { revalidate: 60 }).catch((): { items: CarItem[] } => ({ items: [] })),
-    loadFeaturedSeries().catch((): PublicFeaturedSerie[] => []),
+    loadPublicStats({ revalidate: 0 }).catch((): PublicStats | null => null),
+    loadShowcase({ limit: 8 }, { revalidate: 0 }).catch((): { items: CarItem[] } => ({ items: [] })),
+    loadFeaturedSeries({ revalidate: 0 }).catch((): PublicFeaturedSerie[] => []),
   ]);
   return { stats, showcaseItems: showcase.items, series };
 }
