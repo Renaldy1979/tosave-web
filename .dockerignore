@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.maestri
+.env
+.env.*
+!.env.example
+data
+docs
+_brand
+npm-debug.log*
+*.tsbuildinfo

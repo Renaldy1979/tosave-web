@@ -41,13 +41,3 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# sqlite database
-/data/
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
-
-# uploaded files (only the folder is versioned)
-/public/uploads/*
-!/public/uploads/.gitkeep
