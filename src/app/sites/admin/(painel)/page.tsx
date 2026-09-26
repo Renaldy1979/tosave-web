@@ -91,8 +91,8 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
           <StatCard hero icon={Car} label="Miniaturas" value={data.cars} href="/cars" linkLabel="Ver todas" />
-          <StatCard icon={Layers} label="Séries" value={data.series} />
-          <StatCard icon={Users} label="Usuários" value={data.users} />
+          <StatCard icon={Layers} label="Séries" value={data.series} href="/series" linkLabel="Ver todas" />
+          <StatCard icon={Users} label="Usuários" value={data.users} href="/settings?tab=usuarios" linkLabel="Ver todos" />
           <StatCard icon={ImageOff} label="Sem foto" value={data.noImage} href="/cars?hasImage=false" linkLabel="Ver sem foto" />
         </div>
       )}

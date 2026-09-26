@@ -34,7 +34,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <div key={group.label}>
             <p className="px-3 pb-2 font-condensed text-eyebrow text-fg-subtle uppercase">{group.label}</p>
             <ul className="space-y-0.5">
-              {group.items.map(({ href, label, icon: Icon }) => {
+              {group.items.map(({ href, label, icon: Icon, indent }) => {
                 const active = isActive(pathname, href);
                 return (
                   <li key={href}>
@@ -45,6 +45,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                       className={cn(
                         "relative flex h-10 items-center gap-3 rounded-md px-3 text-body-sm font-medium transition duration-fast",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        indent && "ml-4",
                         active ? "bg-primary-soft text-primary-text" : "text-fg-muted hover:bg-surface-3 hover:text-fg"
                       )}
                     >

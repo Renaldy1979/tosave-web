@@ -47,9 +47,15 @@ export type AdminSerie = {
   updatedAt: string;
 };
 
+export type SerieInput = { name: string; description?: string | null; isDefault?: boolean };
+
 export type AdminBrand = { id: string; name: string; active: boolean; carCount: number };
 
+export type BrandInput = { name: string; active?: boolean };
+
 export type AdminAttribute = { id: string; title: string; description: string | null; carCount: number };
+
+export type AttributeInput = { title: string; description?: string | null };
 
 export type AdminUser = {
   id: string;
