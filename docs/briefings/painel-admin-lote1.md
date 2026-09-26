@@ -44,3 +44,12 @@ Fica para depois: os parceiros com aprovação (ver a especificação do mobile,
 
 - **Alicerce (backend):** amplia as rotas `/admin/*` no `backendToSave` e documenta no `docs/API-V2.md`.
 - **Dev web:** este projeto. Comece pela base, que não depende das rotas novas, e siga o contrato à medida que o Alicerce publicar.
+
+## Backlog do lote 2 (registrado em 25/09/2026)
+
+- **Marcas:**
+  - `state` editorial (ativa, descontinuada ou em análise), separado de `active`;
+  - logo, no mesmo padrão das séries: `brands.image_file_id`, o bucket `brand-logos` e `POST`/`DELETE /admin/brands/:id/logo`.
+- Grade de miniaturas embutida na série ou marca (hoje é um link com a contagem).
+- Badge colorido do papel no seletor da tabela de usuários.
+- Apagar do Appwrite a imagem antiga ao trocar a imagem de um carro ou o logo de uma série (hoje ela fica no bucket).
