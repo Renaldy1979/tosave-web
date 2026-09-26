@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pager } from "@/components/admin/pager";
@@ -10,6 +11,7 @@ import { NativeSelect } from "@/components/ui/select";
 import type { AdminUser } from "@/lib/admin-types";
 import { api, errorMessage } from "@/lib/api";
 import { useMe } from "@/lib/auth";
+import { cn } from "@/lib/cn";
 import { useCursorPage } from "@/lib/use-cursor-page";
 
 const LIMIT = 20;
@@ -222,17 +224,7 @@ function UserRow({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <NativeSelect
-          aria-label={`Papel de ${user.name}`}
-          title={title}
-          disabled={disabled}
-          value={user.role}
-          onChange={(e) => onRoleChange(e.target.value as "admin" | "user")}
-          className="w-40"
-        >
-          <option value="admin">Administrador</option>
-          <option value="user">Colecionador</option>
-        </NativeSelect>
+        <RoleSelect label={`Papel de ${user.name}`} title={title} disabled={disabled} value={user.role} onChange={onRoleChange} />
         <NativeSelect
           aria-label={`Status de ${user.name}`}
           title={title}
@@ -247,5 +239,41 @@ function UserRow({
       </div>
       <p className="shrink-0 text-caption text-fg-subtle sm:w-16 sm:text-right">{monthYear(user.createdAt)}</p>
     </li>
+  );
+}
+
+/** Select nativo com trigger no estilo de Badge (primary para admin, neutral para colecionador). */
+function RoleSelect({
+  value,
+  onChange,
+  disabled,
+  title,
+  label,
+}: {
+  value: "admin" | "user";
+  onChange: (role: "admin" | "user") => void;
+  disabled?: boolean;
+  title?: string;
+  label: string;
+}) {
+  return (
+    <div className="relative">
+      <select
+        aria-label={label}
+        title={title}
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onChange(e.target.value as "admin" | "user")}
+        className={cn(
+          "h-8 w-40 appearance-none rounded-xs py-0 pr-7 pl-2.5 text-caption font-medium transition duration-fast",
+          "focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          value === "admin" ? "bg-primary-soft text-primary-text" : "bg-surface-3 text-fg-muted"
+        )}
+      >
+        <option value="admin">Administrador</option>
+        <option value="user">Colecionador</option>
+      </select>
+      <ChevronDown size={14} strokeWidth={1.75} className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-60" aria-hidden />
+    </div>
   );
 }

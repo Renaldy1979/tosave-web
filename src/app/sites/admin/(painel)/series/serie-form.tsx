@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Info, Layers } from "lucide-react";
+import { Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import { z } from "zod";
 import { PageHeader } from "@/components/admin/admin-shell";
 import { ActionBar, FormError, FormSection, RequiredLabel, Textarea } from "@/components/admin/form-parts";
 import { ImageUpload, useObjectUrl } from "@/components/admin/image-upload";
+import { LinkedCars } from "@/components/admin/linked-cars";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field, fieldClass } from "@/components/ui/input";
@@ -272,18 +273,14 @@ export function SerieForm({ serie: initialSerie, featuredCount }: { serie: Admin
                 />
               </div>
             </FormSection>
-
-            {isEdit ? (
-              <Link
-                href={`/cars?serieId=${serie!.id}`}
-                className="flex items-center gap-1.5 text-body-sm font-medium text-primary-text hover:underline"
-              >
-                <Layers size={16} aria-hidden /> Ver miniaturas desta série ({serie!.carCount})
-                <ArrowRight size={14} aria-hidden />
-              </Link>
-            ) : null}
           </div>
         </div>
+
+        {isEdit ? (
+          <div className="mt-4 lg:mt-6">
+            <LinkedCars title="Miniaturas desta série" filterKey="serieId" filterValue={serie!.id} />
+          </div>
+        ) : null}
 
         <ActionBar
           dirty={dirty}

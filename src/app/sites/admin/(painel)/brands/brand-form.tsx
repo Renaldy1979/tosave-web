@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Car } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/admin/admin-shell";
 import { ActionBar, FormError, FormSection } from "@/components/admin/form-parts";
+import { LinkedCars } from "@/components/admin/linked-cars";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field, fieldClass } from "@/components/ui/input";
@@ -160,17 +160,13 @@ export function BrandForm({ brand: initialBrand }: { brand: AdminBrand | null })
               </div>
             </div>
           </FormSection>
-
-          {isEdit ? (
-            <Link
-              href={`/cars?brandId=${brand!.id}`}
-              className="flex items-center gap-1.5 text-body-sm font-medium text-primary-text hover:underline"
-            >
-              <Car size={16} aria-hidden /> Ver miniaturas desta marca ({brand!.carCount})
-              <ArrowRight size={14} aria-hidden />
-            </Link>
-          ) : null}
         </div>
+
+        {isEdit ? (
+          <div className="mt-4">
+            <LinkedCars title="Miniaturas desta marca" filterKey="brandId" filterValue={brand!.id} />
+          </div>
+        ) : null}
 
         <ActionBar
           dirty={isDirty}
