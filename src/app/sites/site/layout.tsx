@@ -8,7 +8,8 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tosave.cloud"),
-  title: { default: TITLE, template: "%s · ToSave" },
+  // `absolute`: o template "%s · ToSave" do layout raiz não se aplica ao título do site.
+  title: { absolute: TITLE, template: "%s · ToSave" },
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
