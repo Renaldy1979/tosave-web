@@ -16,6 +16,7 @@ export const buttonVariants = cva(
         outline: "border border-border-strong text-fg hover:border-primary hover:text-primary-text",
         ghost: "text-fg-muted hover:bg-surface-3 hover:text-fg",
         danger: "bg-danger text-white hover:bg-danger/90",
+        flame: "bg-flame text-primary-fg font-semibold shadow-glow hover:brightness-110",
       },
       size: {
         sm: "h-9 px-3 text-body-sm",

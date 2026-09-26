@@ -16,5 +16,8 @@ export const BUCKET_CAR_IMAGES = "car-images";
 export const BUCKET_SERIES_LOGOS = "series-logos";
 export const BUCKET_BRAND_LOGOS = "brand-logos";
 
-/** Endereço do app web para colecionadores (link "Ver site"). */
+/** Endereço do app web para colecionadores (login, cadastro). */
 export const APP_URL = trim(process.env.NEXT_PUBLIC_APP_URL || "https://app.tosave.cloud");
+
+/** Endereço do site institucional (link "Voltar ao site"). */
+export const SITE_URL = trim(process.env.NEXT_PUBLIC_SITE_URL || "https://tosave.cloud");

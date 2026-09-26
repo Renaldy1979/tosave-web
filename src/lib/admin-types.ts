@@ -17,6 +17,7 @@ export type AdminCar = {
   brand: string | null;
   scale: string;
   imageFileId: string | null;
+  showcase: boolean;
   attributeIds: string[];
   createdAt: string;
   updatedAt: string;
@@ -34,6 +35,7 @@ export type CarInput = {
   year?: string | null;
   brandId?: string | null;
   attributeIds?: string[];
+  showcase?: boolean;
 };
 
 export type AdminSerie = {

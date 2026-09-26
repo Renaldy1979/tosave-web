@@ -1,17 +1,17 @@
 "use client";
 
-import { Account, AppwriteException, Client } from "appwrite";
+import { Account, AppwriteException, Client, ID } from "appwrite";
 import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKET_BRAND_LOGOS, BUCKET_CAR_IMAGES, BUCKET_SERIES_LOGOS } from "./env";
 
 /**
- * Appwrite no navegador: só login (sessão + JWT) e imagens (Storage,
- * lido direto pela URL de preview). Os dados vêm da API (`api.ts`).
+ * Appwrite no navegador: só login/cadastro (sessão + JWT) e imagens
+ * (Storage, lido direto pela URL de preview). Os dados vêm da API (`api.ts`).
  */
 export const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
 
 export const account = new Account(client);
 
-export { AppwriteException };
+export { AppwriteException, ID };
 
 /** `status` e `type` de um erro do Appwrite (0 e "" quando não é). */
 export function appwriteErrorInfo(err: unknown): { status: number; type: string } {

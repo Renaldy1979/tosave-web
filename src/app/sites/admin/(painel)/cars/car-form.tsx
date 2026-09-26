@@ -15,6 +15,7 @@ import { SeriePicker } from "@/components/admin/serie-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field, fieldClass } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import type { AdminAttribute, AdminBrand, AdminCar, CarInput } from "@/lib/admin-types";
 import { api, errorMessage } from "@/lib/api";
 import { carImageUrl } from "@/lib/appwrite";
@@ -44,6 +45,7 @@ const schema = z.object({
   colorModel: optional(200, "Cor"),
   description: optional(2000, "Descrição"),
   attributeIds: z.array(z.string()),
+  showcase: z.boolean(),
 });
 
 type Values = z.infer<typeof schema>;
@@ -61,6 +63,7 @@ function toValues(car: AdminCar | null): Values {
     colorModel: car?.colorModel ?? "",
     description: car?.description ?? "",
     attributeIds: car?.attributeIds ?? [],
+    showcase: car?.showcase ?? false,
   };
 }
 
@@ -79,6 +82,7 @@ function toInput(v: Values): CarInput {
     colorModel: nullIfEmpty(v.colorModel),
     description: nullIfEmpty(v.description),
     attributeIds: v.attributeIds,
+    showcase: v.showcase,
   };
 }
 
@@ -411,6 +415,19 @@ export function CarForm({ car: initialCar, brands, attributes }: CarFormProps) {
                   ) : (
                     <p className="text-body-sm text-fg-subtle">Nenhum conteúdo disponível.</p>
                   )}
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface-2 px-4 py-3 sm:col-span-2">
+                  <div>
+                    <p className="text-body-sm font-medium text-fg">Vitrine do site</p>
+                    <p className="text-caption text-fg-subtle">Aparece em tosave.cloud, para visitantes sem login.</p>
+                  </div>
+                  <Controller
+                    control={control}
+                    name="showcase"
+                    render={({ field }) => (
+                      <Switch aria-label="Vitrine do site" checked={field.value} disabled={saving} onCheckedChange={field.onChange} />
+                    )}
+                  />
                 </div>
               </div>
             </FormSection>

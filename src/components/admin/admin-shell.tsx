@@ -9,7 +9,7 @@ import { Logo } from "@/components/ui/logo";
 import { ThemeSegmented, ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth, useMe } from "@/lib/auth";
 import { cn } from "@/lib/cn";
-import { APP_URL } from "@/lib/env";
+import { SITE_URL } from "@/lib/env";
 import { isActive, NAV } from "./nav";
 
 function initials(name: string): string {
@@ -62,7 +62,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
       <div className="space-y-3 border-t border-border p-3">
         <a
-          href={APP_URL}
+          href={SITE_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-10 items-center gap-3 rounded-md px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

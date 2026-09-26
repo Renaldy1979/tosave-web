@@ -35,8 +35,9 @@ No DNS da Hostinger, com o IP da VPS `179.199.139.63` e TTL 300:
    - fonte: `Renaldy1979/tosave-web`, branch `main`;
    - build: `Dockerfile`.
 2. **Variáveis:** defina **`PORT=3000`**. Sem ela, o EasyPanel injeta `PORT=80`, o Next.js sobe na 80, o teste de saúde na 3000 falha e o container reinicia em loop (status amarelo).
-   - O resto já vem do `Dockerfile`, que aponta para produção (API, Appwrite e `app.tosave.cloud`).
+   - O resto já vem do `Dockerfile`, que aponta para produção (API, Appwrite, `app.tosave.cloud` e `tosave.cloud`).
    - Os `NEXT_PUBLIC_*` entram no build. Se precisar trocar algum, use os **Build Args**.
+   - **`PUBLIC_SITE_KEY`** (site institucional, lote 2): variável de **runtime** do serviço (não é `NEXT_PUBLIC_`, não entra no build). Vai no header `X-Site-Key` das chamadas do servidor a `/v2/public/*`, para isentar o site do limite por IP da API. Pedir o valor ao Alicerce (`backendToSave`).
 3. **Domínios**, todos com HTTPS e porta interna **3000**:
    - `admin.tosave.cloud`;
    - `app.tosave.cloud`;
@@ -51,8 +52,9 @@ Se o login do painel der erro de CORS, cadastre `admin.tosave.cloud` no console 
 ## 5. Testes
 
 - `https://admin.tosave.cloud`: o login com a conta admin abre o painel.
-- `https://tosave.cloud` e `https://www.tosave.cloud`: redirecionam para `https://app.tosave.cloud`.
-- `https://app.tosave.cloud`: mostra a página "em breve".
+- `https://tosave.cloud`: mostra o site institucional (home, vitrine).
+- `https://www.tosave.cloud`: redireciona para `https://tosave.cloud`.
+- `https://app.tosave.cloud`: mostra a página "em breve", com `/entrar` e `/cadastro` funcionando.
 
 ## Rollback
 

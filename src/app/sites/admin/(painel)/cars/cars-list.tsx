@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Plus, SlidersHorizontal } from "lucide-react
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/admin-shell";
 import { CarThumb } from "@/components/admin/car-thumb";
 import { SearchInput } from "@/components/admin/search-input";
@@ -11,8 +12,9 @@ import { SeriePicker, type SerieOption } from "@/components/admin/serie-picker";
 import { Button, ButtonLink, buttonVariants } from "@/components/ui/button";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/feedback";
 import { NativeSelect } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import type { AdminAttribute, AdminBrand, AdminCar, Page } from "@/lib/admin-types";
-import { api } from "@/lib/api";
+import { api, errorMessage } from "@/lib/api";
 import { loadAttributes, loadBrands, loadSerie, loadYears } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import { useApi } from "@/lib/use-api";
@@ -27,11 +29,13 @@ type Filters = {
   year: string;
   attr: string;
   hasImage: "" | "true" | "false";
+  showcase: "" | "true" | "false";
   limit: number;
 };
 
 function readFilters(params: URLSearchParams): Filters {
   const hasImage = params.get("hasImage");
+  const showcase = params.get("showcase");
   const limit = Number(params.get("limit"));
   return {
     q: params.get("q") ?? "",
@@ -40,6 +44,7 @@ function readFilters(params: URLSearchParams): Filters {
     year: params.get("year") ?? "",
     attr: params.get("attr") ?? "",
     hasImage: hasImage === "true" || hasImage === "false" ? hasImage : "",
+    showcase: showcase === "true" || showcase === "false" ? showcase : "",
     limit: (PAGE_SIZES as readonly number[]).includes(limit) ? limit : 20,
   };
 }
@@ -86,7 +91,9 @@ export function CarsList() {
     [params, pathname, router]
   );
 
-  const activeCount = [filters.serieId, filters.brandId, filters.year, filters.attr, filters.hasImage].filter(Boolean).length;
+  const activeCount = [filters.serieId, filters.brandId, filters.year, filters.attr, filters.hasImage, filters.showcase].filter(
+    Boolean
+  ).length;
   const hasAnyFilter = activeCount > 0 || filters.q !== "";
   const filtersKey = JSON.stringify(filters);
 
@@ -127,7 +134,7 @@ export function CarsList() {
           </Button>
         </div>
 
-        <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5", !showFilters && "hidden lg:grid")}>
+        <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-6", !showFilters && "hidden lg:grid")}>
           <SeriePicker
             placeholder="Todas as séries"
             clearable
@@ -170,6 +177,15 @@ export function CarsList() {
             <option value="true">Com foto</option>
             <option value="false">Sem foto</option>
           </NativeSelect>
+          <NativeSelect
+            aria-label="Vitrine"
+            value={filters.showcase}
+            onChange={(e) => setFilter({ showcase: e.target.value as Filters["showcase"] })}
+          >
+            <option value="">Todas (vitrine)</option>
+            <option value="true">Na vitrine</option>
+            <option value="false">Fora da vitrine</option>
+          </NativeSelect>
         </div>
         {hasAnyFilter ? (
           <button
@@ -187,6 +203,10 @@ export function CarsList() {
   );
 }
 
+function bulkSetShowcase(carIds: string[], showcase: boolean) {
+  return api<{ ok: true; updated: number }>("/admin/cars/showcase", { method: "PUT", body: { carIds, showcase } });
+}
+
 function CarsTable({
   filters,
   hasAnyFilter,
@@ -201,9 +221,11 @@ function CarsTable({
   const [cursors, setCursors] = useState<(string | null)[]>([null]);
   const [pageIndex, setPageIndex] = useState(0);
   const [total, setTotal] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   const cursor = cursors[pageIndex];
 
-  const { data, error, loading, reload } = useApi<Page<AdminCar>>(`cars:${pageIndex}:${cursor ?? ""}`, (signal) =>
+  const { data, error, loading, reload, setData } = useApi<Page<AdminCar>>(`cars:${pageIndex}:${cursor ?? ""}`, (signal) =>
     api<Page<AdminCar>>("/admin/cars", {
       query: {
         q: filters.q,
@@ -212,12 +234,45 @@ function CarsTable({
         years: filters.year,
         attributeIds: filters.attr,
         hasImage: filters.hasImage,
+        showcase: filters.showcase,
         limit: filters.limit,
         cursor,
       },
       signal,
     })
   );
+
+  useEffect(() => {
+    setSelected(new Set());
+  }, [pageIndex, cursor]);
+
+  function patchCar(id: string, showcase: boolean) {
+    setData((prev) => ({ ...prev!, items: prev!.items.map((c) => (c.id === id ? { ...c, showcase } : c)) }));
+  }
+
+  async function toggleShowcase(car: AdminCar, next: boolean) {
+    patchCar(car.id, next);
+    try {
+      await api<AdminCar>(`/admin/cars/${car.id}`, { method: "PUT", body: { showcase: next } });
+    } catch (err) {
+      patchCar(car.id, !next);
+      toast.error(`Não foi possível atualizar a vitrine: ${errorMessage(err)}`);
+    }
+  }
+
+  async function applyBulkShowcase(showcase: boolean) {
+    setBulkBusy(true);
+    try {
+      const { updated } = await bulkSetShowcase([...selected], showcase);
+      toast.success(showcase ? `${updated} miniatura(s) na vitrine.` : `${updated} miniatura(s) fora da vitrine.`);
+      setSelected(new Set());
+      reload();
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   if (error) return <ErrorState onRetry={reload} />;
 
@@ -260,21 +315,59 @@ function CarsTable({
   const from = pageIndex * filters.limit + 1;
   const to = pageIndex * filters.limit + data.items.length;
   const editHref = (car: AdminCar) => `/cars/${car.id}/edit`;
+  const allSelected = data.items.length > 0 && data.items.every((c) => selected.has(c.id));
+
+  function toggleSelectAll() {
+    setSelected(allSelected ? new Set() : new Set(data!.items.map((c) => c.id)));
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   return (
     <div>
+      {selected.size ? (
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-md border border-primary/30 bg-primary-soft px-4 py-2.5">
+          <p className="text-body-sm font-medium text-primary-text">{nf.format(selected.size)} selecionada(s)</p>
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" size="sm" loading={bulkBusy} onClick={() => void applyBulkShowcase(true)}>
+              Ativar vitrine
+            </Button>
+            <Button variant="outline" size="sm" loading={bulkBusy} onClick={() => void applyBulkShowcase(false)}>
+              Desativar vitrine
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {/* Desktop: tabela */}
       <div className="hidden overflow-hidden rounded-lg bg-surface shadow-card md:block">
         <table className="w-full text-left">
           <thead className="bg-surface-2">
             <tr className="font-condensed text-eyebrow text-fg-subtle uppercase">
-              <th className="w-[88px] py-3 pl-4 font-semibold" scope="col">
+              <th className="w-11 py-3 pl-4 font-semibold" scope="col">
+                <input
+                  type="checkbox"
+                  aria-label="Selecionar todas"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  className="size-4 rounded-xs border-border-strong accent-primary"
+                />
+              </th>
+              <th className="w-[88px] py-3 pr-4 font-semibold" scope="col">
                 <span className="sr-only">Foto</span>
               </th>
               <th className="py-3 pr-4 font-semibold" scope="col">Miniatura</th>
               <th className="py-3 pr-4 font-semibold" scope="col">Código</th>
               <th className="py-3 pr-4 font-semibold" scope="col">Série</th>
               <th className="py-3 pr-4 font-semibold" scope="col">Ano</th>
+              <th className="py-3 pr-4 font-semibold" scope="col">Vitrine</th>
             </tr>
           </thead>
           <tbody>
@@ -284,7 +377,16 @@ function CarsTable({
                 onClick={() => router.push(editHref(car))}
                 className="cursor-pointer border-t border-border transition duration-fast hover:bg-surface-3/50"
               >
-                <td className="py-2.5 pl-4">
+                <td className="py-2.5 pl-4" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Selecionar ${car.name}`}
+                    checked={selected.has(car.id)}
+                    onChange={() => toggleSelect(car.id)}
+                    className="size-4 rounded-xs border-border-strong accent-primary"
+                  />
+                </td>
+                <td className="py-2.5 pr-4">
                   <CarThumb fileId={car.imageFileId} alt="" className="h-[42px] w-[56px] rounded-md" iconSize={18} />
                 </td>
                 <td className="py-2.5 pr-4">
@@ -306,6 +408,9 @@ function CarsTable({
                   </span>
                 </td>
                 <td className="py-2.5 pr-4 font-mono text-body-sm text-fg-muted">{car.year || "—"}</td>
+                <td className="py-2.5 pr-4" onClick={(e) => e.stopPropagation()}>
+                  <Switch aria-label={`Vitrine: ${car.name}`} checked={car.showcase} onCheckedChange={(next) => void toggleShowcase(car, next)} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -327,6 +432,9 @@ function CarsTable({
                   {[car.toy, car.year].filter(Boolean).join(" · ") || car.serieName}
                 </p>
               </div>
+              {car.showcase ? (
+                <span className="shrink-0 rounded-xs bg-primary-soft px-1.5 py-0.5 text-caption font-medium text-primary-text">Vitrine</span>
+              ) : null}
               <ChevronRight size={18} className="shrink-0 text-fg-subtle" aria-hidden />
             </Link>
           </li>
