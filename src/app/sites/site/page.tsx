@@ -168,8 +168,8 @@ export default async function SiteHomePage() {
                 const logo = serieLogoUrl(serie.imageFileId);
                 return (
                   <li key={serie.id}>
-                    <Link
-                      href={`/vitrine?serieId=${serie.id}&serieName=${encodeURIComponent(serie.title)}`}
+                    <a
+                      href={`${APP_URL}/cadastro`}
                       className="group flex flex-col items-center rounded-lg bg-bg p-5 text-center shadow-card transition duration-fast hover:shadow-card-hover"
                     >
                       <div className="flex size-16 items-center justify-center rounded-md bg-surface-2">
@@ -182,7 +182,7 @@ export default async function SiteHomePage() {
                       </div>
                       <p className="mt-3 line-clamp-2 text-body-sm font-semibold text-fg group-hover:text-primary-text">{serie.title}</p>
                       <p className="mt-0.5 font-mono text-caption text-fg-subtle">{nf.format(serie.carCount)} miniaturas</p>
-                    </Link>
+                    </a>
                   </li>
                 );
               })}

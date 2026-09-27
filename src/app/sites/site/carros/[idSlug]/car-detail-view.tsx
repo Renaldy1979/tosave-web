@@ -43,9 +43,7 @@ export function CarDetailView({ car }: { car: PublicCarDetail }) {
             {[car.brand.name, car.year || null].filter(Boolean).join(" · ") || "—"}
           </p>
           <h1 className="mt-2 font-display text-display-lg text-fg italic">{car.title}</h1>
-          <Link href={`/vitrine?serieId=${car.serie.id}&serieName=${encodeURIComponent(car.serie.title)}`} className="mt-2 inline-block text-body text-fg-muted hover:text-primary-text">
-            {car.serie.title}
-          </Link>
+          <p className="mt-2 text-body text-fg-muted">{car.serie.title}</p>
 
           {car.description.trim() ? <p className="mt-5 text-body text-fg-muted">{car.description.trim()}</p> : null}
 
