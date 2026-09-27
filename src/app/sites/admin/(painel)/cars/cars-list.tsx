@@ -242,10 +242,6 @@ function CarsTable({
     })
   );
 
-  useEffect(() => {
-    setSelected(new Set());
-  }, [pageIndex, cursor]);
-
   function patchCar(id: string, showcase: boolean) {
     setData((prev) => ({ ...prev!, items: prev!.items.map((c) => (c.id === id ? { ...c, showcase } : c)) }));
   }
@@ -451,7 +447,10 @@ function CarsTable({
             type="button"
             aria-label="Página anterior"
             disabled={pageIndex === 0}
-            onClick={() => setPageIndex((i) => i - 1)}
+            onClick={() => {
+              setSelected(new Set());
+              setPageIndex((i) => i - 1);
+            }}
             className={buttonVariants({ variant: "outline", size: "icon", className: "size-9" })}
           >
             <ChevronLeft size={18} />
@@ -467,6 +466,7 @@ function CarsTable({
             onClick={() => {
               if (data.total !== null) setTotal(data.total);
               setCursors((stack) => [...stack.slice(0, pageIndex + 1), data.nextCursor]);
+              setSelected(new Set());
               setPageIndex((i) => i + 1);
             }}
             className={buttonVariants({ variant: "outline", size: "icon", className: "size-9" })}

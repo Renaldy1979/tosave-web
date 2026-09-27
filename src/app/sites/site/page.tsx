@@ -31,9 +31,6 @@ const STEPS: { icon: LucideIcon; title: string; description: string }[] = [
 
 const nf = new Intl.NumberFormat("pt-BR");
 
-/** Enquanto a comunidade for pequena, a contagem de membros fica escondida (prova social fraca). */
-const MIN_MEMBERS_TO_SHOW = 100;
-
 async function loadHomeData() {
   const [stats, showcase, series] = await Promise.all([
     loadPublicStats({ revalidate: 0 }).catch((): PublicStats | null => null),
@@ -72,7 +69,7 @@ export default async function SiteHomePage() {
               <p className="mt-8 text-body-sm text-fg-subtle">
                 <span className="font-mono text-fg">{nf.format(stats.totalCars)}</span> miniaturas ·{" "}
                 <span className="font-mono text-fg">{nf.format(stats.totalSeries)}</span> séries
-                {stats.totalMembers >= MIN_MEMBERS_TO_SHOW ? (
+                {stats.totalMembers !== null ? (
                   <>
                     {" "}· <span className="font-mono text-fg">{nf.format(stats.totalMembers)}</span> colecionadores
                   </>
@@ -118,13 +115,11 @@ export default async function SiteHomePage() {
       {stats ? (
         <section className="border-t border-border bg-surface">
           <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-5 md:px-6 lg:px-8">
-            <div className={`grid grid-cols-2 gap-4 ${stats.totalMembers >= MIN_MEMBERS_TO_SHOW ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+            <div className={`grid grid-cols-2 gap-4 ${stats.totalMembers !== null ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
               {[
                 { icon: Car, label: "Miniaturas", value: stats.totalCars },
                 { icon: Layers, label: "Séries", value: stats.totalSeries },
-                ...(stats.totalMembers >= MIN_MEMBERS_TO_SHOW
-                  ? [{ icon: Users, label: "Colecionadores", value: stats.totalMembers }]
-                  : []),
+                ...(stats.totalMembers !== null ? [{ icon: Users, label: "Colecionadores", value: stats.totalMembers }] : []),
                 { icon: Car, label: "Itens colecionados", value: stats.totalCollected },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="text-center">

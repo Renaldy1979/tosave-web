@@ -30,7 +30,8 @@ export type PublicCarDetail = CarItem & {
   images: unknown[];
 };
 
-export type PublicStats = { totalCars: number; totalSeries: number; totalMembers: number; totalCollected: number };
+/** `totalMembers` vem `null` enquanto a comunidade não bater `minMembersToShow` (`GET /admin/config`). */
+export type PublicStats = { totalCars: number; totalSeries: number; totalMembers: number | null; totalCollected: number };
 
 export type PublicFeaturedSerie = { id: string; title: string; description: string; imageFileId: string | null; carCount: number };
 

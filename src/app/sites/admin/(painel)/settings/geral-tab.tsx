@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type InputHTMLAttributes } from "react";
 import { useForm, type FieldErrors, type UseFormRegisterReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,6 +32,10 @@ const schema = z.object({
     .string()
     .trim()
     .refine((v) => v === "" || /^\d+\.\d+\.\d+$/.test(v), "Versão no formato N.N.N (ex.: 1.4.0)."),
+  minMembersToShow: z
+    .string()
+    .trim()
+    .refine((v) => /^\d+$/.test(v), "Use um número inteiro, 0 ou mais."),
 });
 
 type Values = z.infer<typeof schema>;
@@ -43,6 +47,7 @@ function toValues(config: AdminConfig): Values {
     supportEmail: config.supportEmail,
     passwordRecoveryUrl: config.passwordRecoveryUrl,
     minAppVersion: config.minAppVersion,
+    minMembersToShow: String(config.minMembersToShow),
   };
 }
 
@@ -84,8 +89,11 @@ function GeralForm({ config, onSaved }: { config: AdminConfig; onSaved: () => vo
 
   const onSubmit = handleSubmit(async (v) => {
     setServerError(null);
-    const patch: Partial<Values> = {};
-    for (const key of Object.keys(dirtyFields) as (keyof Values)[]) patch[key] = v[key].trim();
+    const patch: Partial<AdminConfig> = {};
+    for (const key of Object.keys(dirtyFields) as (keyof Values)[]) {
+      if (key === "minMembersToShow") patch.minMembersToShow = Number(v.minMembersToShow);
+      else patch[key] = v[key].trim();
+    }
     if (!Object.keys(patch).length) {
       toast.info("Nenhuma alteração para salvar.");
       return;
@@ -147,6 +155,22 @@ function GeralForm({ config, onSaved }: { config: AdminConfig; onSaved: () => vo
         />
       </div>
 
+      <div className="mt-4 rounded-lg bg-surface p-5 shadow-card md:p-6">
+        <h2 className="text-h3 text-fg">Site institucional</h2>
+        <p className="text-body-sm text-fg-subtle">Controla o que aparece em tosave.cloud.</p>
+
+        <SettingsRow
+          label="Mínimo de membros para exibir no site"
+          hint="Abaixo desse total, a contagem de colecionadores fica escondida na home."
+          error={errors.minMembersToShow?.message}
+          field={register("minMembersToShow")}
+          placeholder="100"
+          inputMode="numeric"
+          disabled={saving}
+          last
+        />
+      </div>
+
       <ActionBar dirty={isDirty} saving={saving} saveLabel="Salvar" onCancel={() => reset(toValues(config))} />
     </form>
   );
@@ -159,6 +183,7 @@ function SettingsRow({
   field,
   placeholder,
   type = "text",
+  inputMode,
   disabled,
   last,
 }: {
@@ -168,6 +193,7 @@ function SettingsRow({
   field: UseFormRegisterReturn;
   placeholder?: string;
   type?: string;
+  inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   disabled?: boolean;
   last?: boolean;
 }) {
@@ -185,6 +211,7 @@ function SettingsRow({
         <input
           id={id}
           type={type}
+          inputMode={inputMode}
           placeholder={placeholder}
           disabled={disabled}
           aria-invalid={error ? true : undefined}

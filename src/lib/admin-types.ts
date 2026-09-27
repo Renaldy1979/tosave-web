@@ -86,5 +86,6 @@ export type AdminConfig = {
   supportEmail: string;
   passwordRecoveryUrl: string;
   minAppVersion: string;
+  minMembersToShow: number;
   updatedAt: string;
 };
