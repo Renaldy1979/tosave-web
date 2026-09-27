@@ -7,7 +7,6 @@ import { EmptyState, ErrorState, Skeleton } from "@/components/ui/feedback";
 import { APP_URL } from "@/lib/env";
 import { loadShowcase, type CarItem, type Page } from "@/lib/public-api";
 
-const nf = new Intl.NumberFormat("pt-BR");
 const LIMIT = 24;
 const MAX_ITEMS = 48;
 
@@ -50,13 +49,13 @@ function MidBanner() {
   );
 }
 
-function EndBanner({ totalCars }: { totalCars: number | null }) {
+function EndBanner({ totalCarsLabel }: { totalCarsLabel: string | null }) {
   return (
     <div className="mt-8 flex flex-col items-center gap-3 rounded-lg bg-surface px-5 py-8 text-center shadow-card sm:mt-10">
       <p className="font-display text-h2 text-fg italic">Isso é só uma amostra.</p>
       <p className="max-w-md text-body text-fg-muted">
-        {totalCars !== null
-          ? `A comunidade ToSave tem ${nf.format(totalCars)} miniaturas. Cadastre-se para ver a coleção completa e começar a sua.`
+        {totalCarsLabel !== null
+          ? `A comunidade ToSave já tem ${totalCarsLabel} miniaturas esperando por você. Cadastre-se para ver a coleção completa e começar a sua.`
           : "Cadastre-se para ver a coleção completa da comunidade e começar a sua."}
       </p>
       <ButtonLink href={`${APP_URL}/cadastro`} variant="flame" size="lg">
@@ -66,7 +65,13 @@ function EndBanner({ totalCars }: { totalCars: number | null }) {
   );
 }
 
-export function VitrineView({ totalCars, initialPage }: { totalCars: number | null; initialPage: Page<CarItem> | null }) {
+export function VitrineView({
+  totalCarsLabel,
+  initialPage,
+}: {
+  totalCarsLabel: string | null;
+  initialPage: Page<CarItem> | null;
+}) {
   const [items, setItems] = useState<CarItem[]>(initialPage?.items ?? []);
   const [cursor, setCursor] = useState<string | null>(initialPage?.nextCursor ?? null);
   const [loadError, setLoadError] = useState(initialPage === null);
@@ -109,7 +114,7 @@ export function VitrineView({ totalCars, initialPage }: { totalCars: number | nu
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-5 md:px-6 lg:px-8 lg:py-12">
       <h1 className="font-display text-h1 text-fg italic">Vitrine</h1>
-      <p className="mt-1 text-body text-fg-muted">Os destaques da comunidade ToSave.</p>
+      <p className="mt-1 text-body text-fg-muted">Uma amostra do que está esperando por você na comunidade ToSave.</p>
 
       <div className="mt-8">
         {loadError ? (
@@ -132,7 +137,7 @@ export function VitrineView({ totalCars, initialPage }: { totalCars: number | nu
                 {moreError ? <p className="text-caption text-danger">Não foi possível carregar mais. Tente de novo.</p> : null}
               </div>
             ) : (
-              <EndBanner totalCars={totalCars} />
+              <EndBanner totalCarsLabel={totalCarsLabel} />
             )}
           </>
         )}

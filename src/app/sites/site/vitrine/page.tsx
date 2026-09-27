@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { marketingNumber } from "@/lib/marketing-number";
 import { loadPublicStats, loadShowcase, type Page, type CarItem, type PublicStats } from "@/lib/public-api";
 import { VitrineView } from "./vitrine-view";
 
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Vitrine",
-  description: "Os destaques da comunidade ToSave: Hot Wheels e Matchbox raros, organizados por série e marca.",
+  description: "Hot Wheels e Matchbox raros esperando por você. Cadastre-se para ver a coleção completa da comunidade ToSave.",
 };
 
 export default async function VitrinePage() {
@@ -16,5 +17,8 @@ export default async function VitrinePage() {
     loadShowcase({ limit: 24 }, { revalidate: 0 }).catch((): Page<CarItem> | null => null),
   ]);
 
-  return <VitrineView totalCars={stats?.totalCars ?? null} initialPage={firstPage} />;
+  // Formatado no servidor: o número exato do total nunca viaja até o cliente (nem no payload de hidratação).
+  const totalCarsLabel = stats ? marketingNumber(stats.totalCars) : null;
+
+  return <VitrineView totalCarsLabel={totalCarsLabel} initialPage={firstPage} />;
 }

@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site/site-header";
 
 const TITLE = "ToSave · Sua garagem em escala 1:64";
 const DESCRIPTION =
-  "Monte, organize e compartilhe sua coleção de Hot Wheels e Matchbox. Cadastre-se de graça e leve sua garagem para onde você for.";
+  "Uma comunidade viva de colecionadores, com milhares de miniaturas Hot Wheels e Matchbox esperando por você. Cadastre-se de graça e leve sua garagem para onde você for.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tosave.cloud"),

@@ -12,7 +12,7 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <Logo variant="auto" size="sm" />
             <p className="mt-4 text-body-sm text-fg-muted">
-              Sua garagem em escala 1:64. Monte, organize e compartilhe sua coleção de Hot Wheels e Matchbox.
+              Sua garagem em escala 1:64, numa comunidade de colecionadores de Hot Wheels e Matchbox que só cresce.
             </p>
           </div>
           <div className="flex flex-col gap-3">

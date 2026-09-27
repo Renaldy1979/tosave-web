@@ -6,6 +6,7 @@ import { CarCard } from "@/components/site/car-card";
 import { ButtonLink } from "@/components/ui/button";
 import { serieLogoUrl } from "@/lib/storage-url";
 import { APP_URL } from "@/lib/env";
+import { marketingNumber } from "@/lib/marketing-number";
 import { loadFeaturedSeries, loadPublicStats, loadShowcase, type CarItem, type PublicFeaturedSerie, type PublicStats } from "@/lib/public-api";
 
 // Renderiza a cada visita: a curadoria da vitrine no painel aparece na hora (o ISR não renovava no container).
@@ -29,8 +30,6 @@ const STEPS: { icon: LucideIcon; title: string; description: string }[] = [
   },
 ];
 
-const nf = new Intl.NumberFormat("pt-BR");
-
 async function loadHomeData() {
   const [stats, showcase, series] = await Promise.all([
     loadPublicStats({ revalidate: 0 }).catch((): PublicStats | null => null),
@@ -49,13 +48,13 @@ export default async function SiteHomePage() {
         <div aria-hidden className="absolute inset-0 bg-hero-glow" />
         <div className="relative mx-auto grid max-w-[1440px] gap-10 px-4 py-14 sm:px-5 md:px-6 lg:grid-cols-12 lg:items-center lg:px-8 lg:py-24">
           <div className="lg:col-span-6">
-            <p className="font-condensed text-eyebrow text-primary-text uppercase">Catálogo de miniaturas</p>
+            <p className="font-condensed text-eyebrow text-primary-text uppercase">Uma comunidade viva</p>
             <h1 className="mt-3 max-w-lg font-display text-display-2xl font-extrabold text-fg italic">
               Sua garagem em escala <span className="bg-flame bg-clip-text text-transparent">1:64</span>.
             </h1>
             <p className="mt-5 max-w-md text-body-lg text-fg-muted">
-              Registre cada Hot Wheels e Matchbox, organize por série, marca e ano, e compartilhe sua coleção com outros
-              colecionadores.
+              Milhares de miniaturas esperando por você. Organize sua garagem, descubra raridades e faça parte da
+              comunidade ToSave.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <ButtonLink href={`${APP_URL}/cadastro`} variant="flame" size="lg">
@@ -67,11 +66,11 @@ export default async function SiteHomePage() {
             </div>
             {stats ? (
               <p className="mt-8 text-body-sm text-fg-subtle">
-                <span className="font-mono text-fg">{nf.format(stats.totalCars)}</span> miniaturas ·{" "}
-                <span className="font-mono text-fg">{nf.format(stats.totalSeries)}</span> séries
+                <span className="font-mono text-fg">{marketingNumber(stats.totalCars)}</span> miniaturas esperando por
+                você · <span className="font-mono text-fg">{marketingNumber(stats.totalSeries)}</span> séries
                 {stats.totalMembers !== null ? (
                   <>
-                    {" "}· <span className="font-mono text-fg">{nf.format(stats.totalMembers)}</span> colecionadores
+                    {" "}· <span className="font-mono text-fg">{marketingNumber(stats.totalMembers)}</span> colecionadores
                   </>
                 ) : null}
               </p>
@@ -96,7 +95,7 @@ export default async function SiteHomePage() {
       <section id="como-funciona" className="mx-auto max-w-[1440px] px-4 py-16 sm:px-5 md:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-h1 text-fg italic">Como funciona</h2>
-          <p className="mt-3 text-body-lg text-fg-muted">Três passos para transformar sua caixa de miniaturas em uma garagem organizada.</p>
+          <p className="mt-3 text-body-lg text-fg-muted">Três passos para organizar sua garagem e fazer parte da comunidade ToSave.</p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, description }, i) => (
@@ -126,7 +125,9 @@ export default async function SiteHomePage() {
                   <div className="mx-auto flex size-11 items-center justify-center rounded-md bg-primary-soft text-primary-text">
                     <Icon size={22} strokeWidth={1.75} aria-hidden />
                   </div>
-                  <p className="mt-3 font-display text-display-lg font-extrabold text-fg italic">{nf.format(value)}</p>
+                  <p className="mt-3 font-display text-[1.5rem] leading-tight font-extrabold text-fg italic md:text-display-lg">
+                    {marketingNumber(value)}
+                  </p>
                   <p className="text-body-sm text-fg-muted">{label}</p>
                 </div>
               ))}
@@ -140,7 +141,7 @@ export default async function SiteHomePage() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="font-display text-h1 text-fg italic">Destaques da vitrine</h2>
-              <p className="mt-1 text-body text-fg-muted">Uma amostra da comunidade ToSave.</p>
+              <p className="mt-1 text-body text-fg-muted">Uma amostra do que está esperando por você na comunidade ToSave.</p>
             </div>
             <Link href="/vitrine" className="hidden shrink-0 text-body-sm font-medium text-primary-text hover:underline sm:block">
               Ver vitrine completa →
@@ -181,7 +182,7 @@ export default async function SiteHomePage() {
                         )}
                       </div>
                       <p className="mt-3 line-clamp-2 text-body-sm font-semibold text-fg group-hover:text-primary-text">{serie.title}</p>
-                      <p className="mt-0.5 font-mono text-caption text-fg-subtle">{nf.format(serie.carCount)} miniaturas</p>
+                      <p className="mt-0.5 font-mono text-caption text-fg-subtle">{marketingNumber(serie.carCount)} miniaturas</p>
                     </a>
                   </li>
                 );
@@ -193,8 +194,8 @@ export default async function SiteHomePage() {
 
       <section className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-[1440px] flex-col items-center gap-5 px-4 py-16 text-center sm:px-5 md:px-6 lg:px-8">
-          <h2 className="max-w-xl font-display text-h1 text-fg italic">Pronto para organizar sua coleção?</h2>
-          <p className="max-w-md text-body text-fg-muted">Leva menos de um minuto e é de graça.</p>
+          <h2 className="max-w-xl font-display text-h1 text-fg italic">A comunidade está esperando por você.</h2>
+          <p className="max-w-md text-body text-fg-muted">Leva menos de um minuto, é de graça, e sua garagem vai com você para onde for.</p>
           <ButtonLink href={`${APP_URL}/cadastro`} variant="flame" size="lg">
             Criar minha coleção
           </ButtonLink>
