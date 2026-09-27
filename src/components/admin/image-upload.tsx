@@ -22,7 +22,7 @@ type ImageUploadProps = {
   error?: string | null;
   onSelect: (file: File) => void;
   onRemove?: () => void;
-  aspect?: "card" | "square";
+  aspect?: "card" | "square" | "wide";
   fit?: "cover" | "contain";
   hint?: ReactNode;
   disabled?: boolean;
@@ -72,7 +72,7 @@ export function ImageUpload({
         }}
         className={cn(
           "group relative overflow-hidden rounded-lg border-2 border-dashed bg-surface-2 transition duration-fast",
-          aspect === "card" ? "aspect-card" : "aspect-square",
+          aspect === "card" ? "aspect-card" : aspect === "wide" ? "aspect-video" : "aspect-square",
           src ? "border-transparent bg-card-stage" : "border-border-strong",
           dragOver && "border-primary bg-primary-soft/40",
           shownError && "border-danger"
