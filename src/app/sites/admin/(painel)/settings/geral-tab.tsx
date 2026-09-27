@@ -2,12 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useId, useState, type InputHTMLAttributes } from "react";
-import { useForm, type FieldErrors, type UseFormRegisterReturn } from "react-hook-form";
+import { Controller, useForm, type FieldErrors, type UseFormRegisterReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ActionBar, FormError } from "@/components/admin/form-parts";
 import { ErrorState, Skeleton } from "@/components/ui/feedback";
 import { fieldClass } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import type { AdminConfig } from "@/lib/admin-types";
 import { api, errorMessage } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -36,6 +37,7 @@ const schema = z.object({
     .string()
     .trim()
     .refine((v) => /^\d+$/.test(v), "Use um número inteiro, 0 ou mais."),
+  notifyOnNews: z.boolean(),
 });
 
 type Values = z.infer<typeof schema>;
@@ -48,6 +50,7 @@ function toValues(config: AdminConfig): Values {
     passwordRecoveryUrl: config.passwordRecoveryUrl,
     minAppVersion: config.minAppVersion,
     minMembersToShow: String(config.minMembersToShow),
+    notifyOnNews: config.notifyOnNews,
   };
 }
 
@@ -72,6 +75,7 @@ function GeralForm({ config, onSaved }: { config: AdminConfig; onSaved: () => vo
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
+    control,
     handleSubmit,
     reset,
     setFocus,
@@ -92,6 +96,7 @@ function GeralForm({ config, onSaved }: { config: AdminConfig; onSaved: () => vo
     const patch: Partial<AdminConfig> = {};
     for (const key of Object.keys(dirtyFields) as (keyof Values)[]) {
       if (key === "minMembersToShow") patch.minMembersToShow = Number(v.minMembersToShow);
+      else if (key === "notifyOnNews") patch.notifyOnNews = v.notifyOnNews;
       else patch[key] = v[key].trim();
     }
     if (!Object.keys(patch).length) {
@@ -169,6 +174,27 @@ function GeralForm({ config, onSaved }: { config: AdminConfig; onSaved: () => vo
           disabled={saving}
           last
         />
+      </div>
+
+      <div className="mt-4 rounded-lg bg-surface p-5 shadow-card md:p-6">
+        <h2 className="text-h3 text-fg">Notificações</h2>
+        <p className="text-body-sm text-fg-subtle">Avisos automáticos enviados pelo próprio servidor.</p>
+
+        <div className="flex items-start justify-between gap-4 py-4">
+          <div>
+            <label htmlFor="notifyOnNews" className="font-medium text-fg">
+              Notificar todos ao publicar notícia
+            </label>
+            <p className="mt-1 text-body-sm text-fg-subtle">Manda push e caixa de entrada pra toda a comunidade quando uma notícia é publicada.</p>
+          </div>
+          <Controller
+            control={control}
+            name="notifyOnNews"
+            render={({ field }) => (
+              <Switch id="notifyOnNews" checked={field.value} disabled={saving} onCheckedChange={field.onChange} />
+            )}
+          />
+        </div>
       </div>
 
       <ActionBar dirty={isDirty} saving={saving} saveLabel="Salvar" onCancel={() => reset(toValues(config))} />

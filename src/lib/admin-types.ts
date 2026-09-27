@@ -87,6 +87,7 @@ export type AdminConfig = {
   passwordRecoveryUrl: string;
   minAppVersion: string;
   minMembersToShow: number;
+  notifyOnNews: boolean;
   updatedAt: string;
 };
 
@@ -106,3 +107,15 @@ export type AdminNews = {
 };
 
 export type NewsInput = { title: string; summary?: string | null; content?: string | null; link?: string | null };
+
+export type AdminNotification = {
+  id: string;
+  title: string;
+  body: string;
+  type: string;
+  targetUserId: string | null;
+  targetId: string | null;
+  createdBy: string | null;
+  broadcast: boolean;
+  createdAt: string;
+};
