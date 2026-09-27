@@ -1,4 +1,4 @@
-import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKET_BRAND_LOGOS, BUCKET_CAR_IMAGES, BUCKET_SERIES_LOGOS } from "./env";
+import { APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, BUCKET_BRAND_LOGOS, BUCKET_CAR_IMAGES, BUCKET_NEWS_IMAGES, BUCKET_SERIES_LOGOS } from "./env";
 
 /**
  * URLs de preview do Storage do Appwrite. Módulo neutro (sem "use client"):
@@ -27,4 +27,10 @@ export function serieLogoUrl(fileId: string | null | undefined): string | null {
 /** Logo de marca (`brand-logos`, mesmo formato do logo de série): 300/90. */
 export function brandLogoUrl(fileId: string | null | undefined): string | null {
   return fileId ? previewUrl(BUCKET_BRAND_LOGOS, fileId, 300, 90) : null;
+}
+
+/** Imagem de notícia (`news-images`, 16:9): card 640/75, detalhe 1280/85. */
+export function newsImageUrl(fileId: string | null | undefined, size: "grid" | "full" = "grid"): string | null {
+  if (!fileId) return null;
+  return size === "full" ? previewUrl(BUCKET_NEWS_IMAGES, fileId, 1280, 85) : previewUrl(BUCKET_NEWS_IMAGES, fileId, 640, 75);
 }

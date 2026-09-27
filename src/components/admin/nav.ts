@@ -1,4 +1,4 @@
-import { Car, LayoutDashboard, Layers, Settings, Sparkles, Tag, type LucideIcon } from "lucide-react";
+import { Car, LayoutDashboard, Layers, Newspaper, Settings, Sparkles, Tag, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; indent?: boolean };
 export type NavGroup = { label: string; items: NavItem[] };
@@ -17,6 +17,10 @@ export const NAV: NavGroup[] = [
       { href: "/series", label: "Séries", icon: Layers },
       { href: "/brands", label: "Marcas", icon: Tag },
     ],
+  },
+  {
+    label: "Comunidade",
+    items: [{ href: "/news", label: "Notícias", icon: Newspaper }],
   },
   {
     label: "Sistema",

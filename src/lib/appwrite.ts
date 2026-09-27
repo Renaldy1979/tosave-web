@@ -28,4 +28,4 @@ export function appwriteErrorInfo(err: unknown): { status: number; type: string 
   return { status: err.code ?? 0, type };
 }
 
-export { brandLogoUrl, carImageUrl, serieLogoUrl } from "./storage-url";
+export { brandLogoUrl, carImageUrl, newsImageUrl, serieLogoUrl } from "./storage-url";

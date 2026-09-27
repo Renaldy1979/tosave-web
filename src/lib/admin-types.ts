@@ -89,3 +89,20 @@ export type AdminConfig = {
   minMembersToShow: number;
   updatedAt: string;
 };
+
+export type AdminNews = {
+  id: string;
+  title: string;
+  summary: string | null;
+  content: string | null;
+  imageFileId: string | null;
+  link: string | null;
+  published: boolean;
+  publishedAt: string | null;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type NewsInput = { title: string; summary?: string | null; content?: string | null; link?: string | null };
