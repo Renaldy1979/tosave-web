@@ -1,4 +1,4 @@
-import { BellRing, Car, LayoutDashboard, Layers, Newspaper, Settings, Sparkles, Tag, type LucideIcon } from "lucide-react";
+import { BellRing, Car, LayoutDashboard, Layers, Newspaper, Repeat, Settings, Sparkles, Tag, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; indent?: boolean };
 export type NavGroup = { label: string; items: NavItem[] };
@@ -23,6 +23,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/news", label: "Notícias", icon: Newspaper },
       { href: "/notifications", label: "Avisos", icon: BellRing },
+      { href: "/trade", label: "Clube da Troca", icon: Repeat },
     ],
   },
   {

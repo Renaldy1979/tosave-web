@@ -108,6 +108,30 @@ export type AdminNews = {
 
 export type NewsInput = { title: string; summary?: string | null; content?: string | null; link?: string | null };
 
+export type TradeCar = {
+  id: string;
+  title: string;
+  imageFileId: string | null;
+  toy: string;
+  collector: string;
+  brandName: string;
+  serieTitle: string;
+};
+
+export type AdminTradeListing = {
+  id: string;
+  car: TradeCar;
+  userId: string;
+  userName: string;
+  type: "TRADE" | "SALE";
+  price: number | null;
+  description: string;
+  status: "ACTIVE" | "COMPLETED" | "CANCELLED";
+  desiredCars: TradeCar[];
+  hasContact: boolean;
+  createdAt: string;
+};
+
 export type AdminNotification = {
   id: string;
   title: string;
