@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Newspaper } from "lucide-react";
-import { ComingSoon } from "@/components/app/coming-soon";
+import { NoticiasView } from "./noticias-view";
 
 export const metadata: Metadata = {
   title: "Notícias",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function NoticiasPage() {
-  return <ComingSoon icon={Newspaper} title="Notícias" description="Em breve você acompanha as novidades do ToSave por aqui." />;
+  return <NoticiasView />;
 }

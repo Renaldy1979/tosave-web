@@ -51,3 +51,46 @@ export type CollectionMutation = { item: CollectionItem | null; summary: Summary
 export type Brand = { id: string; name: string; state: "ativa" | "descontinuada" | "em_analise"; active: boolean; imageFileId: string | null; carCount: number };
 
 export type Attribute = { id: string; title: string; description: string };
+
+export type NewsItem = {
+  id: string;
+  title: string;
+  summary: string;
+  content: string;
+  imageFileId: string | null;
+  link: string | null;
+  publishedAt: string;
+};
+
+export type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  read: boolean;
+  type: string;
+  targetId: string | null;
+  createdAt: string;
+};
+
+export type TradeType = "TRADE" | "SALE";
+export type TradeStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
+
+export type TradeListing = {
+  id: string;
+  car: CarItem;
+  userId: string;
+  userName: string;
+  type: TradeType;
+  price: number | null;
+  description: string;
+  status: TradeStatus;
+  desiredCars: CarItem[];
+  hasContact: boolean;
+  createdAt: string;
+};
+
+export type StatsSummary = Summary & { catalogTotal: number; catalogPct: number };
+
+export type SerieStats = { serieId: string; title: string; imageFileId: string | null; owned: number; carCount: number; pct: number; complete: boolean };
+
+export type YearStats = { year: number; owned: number; carCount: number; pct: number };

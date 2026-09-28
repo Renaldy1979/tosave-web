@@ -9,6 +9,7 @@ import { ErrorState, Skeleton } from "@/components/ui/feedback";
 import { Logo } from "@/components/ui/logo";
 import { Toaster } from "@/components/ui/toaster";
 import { CollectionSummaryProvider } from "@/lib/collection-summary";
+import { NotificationsUnreadProvider } from "@/lib/notifications-unread";
 import { useAuth } from "@/lib/auth";
 
 function ShellSkeleton() {
@@ -84,8 +85,10 @@ export default function AppShellLayout({ children }: LayoutProps<"/sites/app">) 
 
   return (
     <CollectionSummaryProvider>
-      <AppShell>{children}</AppShell>
-      <Toaster />
+      <NotificationsUnreadProvider>
+        <AppShell>{children}</AppShell>
+        <Toaster />
+      </NotificationsUnreadProvider>
     </CollectionSummaryProvider>
   );
 }

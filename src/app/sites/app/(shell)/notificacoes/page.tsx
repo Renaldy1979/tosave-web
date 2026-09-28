@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Bell } from "lucide-react";
-import { ComingSoon } from "@/components/app/coming-soon";
+import { NotificacoesView } from "./notificacoes-view";
 
 export const metadata: Metadata = {
   title: "Notificações",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function NotificacoesPage() {
-  return <ComingSoon icon={Bell} title="Notificações" description="Em breve sua caixa de notificações aparece aqui." />;
+  return <NotificacoesView />;
 }

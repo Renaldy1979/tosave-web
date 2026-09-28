@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/logo";
 import { ThemeSegmented, ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth, useMe } from "@/lib/auth";
 import { cn } from "@/lib/cn";
+import { useNotificationsUnread } from "@/lib/notifications-unread";
 import { APP_DESKTOP_NAV, APP_MOBILE_TABS, APP_MORE_ITEMS, APP_NOTIFICATIONS_HREF, isAppNavActive } from "./nav";
 
 function initials(name: string): string {
@@ -17,18 +18,27 @@ function initials(name: string): string {
   return ((parts[0][0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
-/** Sino de notificações (celular e desktop). A caixa e o contador de não lidas chegam no lote 5b. */
+/** Sino de notificações (celular e desktop), com contador de não lidas. */
 function NotificationBell({ className }: { className?: string }) {
+  const { count } = useNotificationsUnread();
   return (
     <Link
       href={APP_NOTIFICATIONS_HREF}
-      aria-label="Notificações"
+      aria-label={count > 0 ? `Notificações, ${count} não lidas` : "Notificações"}
       className={cn(
         "relative flex size-10 shrink-0 items-center justify-center rounded-md text-fg-muted transition duration-fast hover:bg-surface-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
     >
       <Bell size={20} strokeWidth={1.75} aria-hidden />
+      {count > 0 ? (
+        <span
+          aria-hidden
+          className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-flame px-1 font-mono text-[10px] leading-none text-white"
+        >
+          {count > 9 ? "9+" : count}
+        </span>
+      ) : null}
     </Link>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Repeat } from "lucide-react";
-import { ComingSoon } from "@/components/app/coming-soon";
+import { TrocaView } from "./troca-view";
 
 export const metadata: Metadata = {
   title: "Clube da Troca",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function TrocaPage() {
-  return <ComingSoon icon={Repeat} title="Clube da Troca" description="Em breve você anuncia trocas e vendas da sua coleção aqui." />;
+  return <TrocaView />;
 }

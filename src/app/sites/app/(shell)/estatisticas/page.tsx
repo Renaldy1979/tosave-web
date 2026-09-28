@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { BarChart3 } from "lucide-react";
-import { ComingSoon } from "@/components/app/coming-soon";
+import { EstatisticasView } from "./estatisticas-view";
 
 export const metadata: Metadata = {
   title: "Estatísticas",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function EstatisticasPage() {
-  return <ComingSoon icon={BarChart3} title="Estatísticas" description="Em breve você vê as estatísticas da sua coleção aqui." />;
+  return <EstatisticasView />;
 }
