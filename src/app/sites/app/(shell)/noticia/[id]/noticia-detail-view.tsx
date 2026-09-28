@@ -3,11 +3,12 @@
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { getNewsByIdMock } from "@/app/sites/app/_mock/news";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
+import { ApiError } from "@/lib/api";
 import { newsImageUrl } from "@/lib/appwrite";
 import type { NewsItem } from "@/lib/app-types";
+import { getNewsById } from "@/lib/news";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
@@ -19,17 +20,15 @@ export function NoticiaDetailView({ id }: { id: string }) {
 
   const load = useCallback(() => {
     setLoadState("loading");
-    getNewsByIdMock(id)
+    getNewsById(id)
       .then((item) => {
-        if (!item) {
-          setLoadState("not-found");
-          setNews(null);
-          return;
-        }
         setNews(item);
         setLoadState("ok");
       })
-      .catch(() => setLoadState("error"));
+      .catch((err: unknown) => {
+        setNews(null);
+        setLoadState(err instanceof ApiError && err.status === 404 ? "not-found" : "error");
+      });
   }, [id]);
 
   useEffect(load, [load]);

@@ -3,12 +3,12 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getSeriesStatsMock, getStatsSummaryMock, getYearsStatsMock } from "@/app/sites/app/_mock/stats";
 import { ProgressRow } from "@/components/app/progress-row";
 import { StatTile } from "@/components/app/stat-tile";
 import { ErrorState } from "@/components/ui/feedback";
 import { SegmentedControl } from "@/components/ui/segmented";
 import type { SerieStats, StatsSummary, YearStats } from "@/lib/app-types";
+import { getSeriesStats, getStatsSummary, getYearsStats } from "@/lib/stats";
 
 type SortMode = "pct" | "name";
 type Section<T> = { state: "loading" | "ok" | "error"; data: T };
@@ -51,21 +51,21 @@ export function EstatisticasView() {
 
   useEffect(() => {
     setSummary({ state: "loading", data: null });
-    getStatsSummaryMock()
+    getStatsSummary()
       .then((data) => setSummary({ state: "ok", data }))
       .catch(() => setSummary({ state: "error", data: null }));
   }, []);
 
   useEffect(() => {
     setSeries({ state: "loading", data: [] });
-    getSeriesStatsMock()
+    getSeriesStats()
       .then((data) => setSeries({ state: "ok", data }))
       .catch(() => setSeries({ state: "error", data: [] }));
   }, []);
 
   useEffect(() => {
     setYears({ state: "loading", data: [] });
-    getYearsStatsMock()
+    getYearsStats()
       .then((data) => setYears({ state: "ok", data }))
       .catch(() => setYears({ state: "error", data: [] }));
   }, []);

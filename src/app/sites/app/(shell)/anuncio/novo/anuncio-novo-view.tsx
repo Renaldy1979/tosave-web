@@ -5,7 +5,6 @@ import { ArrowLeft, Plus, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { createTradeListingMock } from "@/app/sites/app/_mock/trade";
 import { CarThumb } from "@/components/admin/car-thumb";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/feedback";
@@ -16,6 +15,7 @@ import { getCarById, listCars } from "@/lib/app-catalog";
 import type { CarItem, TradeType } from "@/lib/app-types";
 import { useMe } from "@/lib/auth";
 import { getCollectionPage } from "@/lib/collection";
+import { createTradeListing } from "@/lib/trade";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 const MAX_DESIRED = 20;
@@ -123,11 +123,11 @@ export function AnuncioNovoView() {
     }
     setSubmitting(true);
     try {
-      const listing = await createTradeListingMock(me.id, me.name, {
-        carSnapshot: offeredCar,
+      const listing = await createTradeListing({
+        carId: offeredCar.id,
         type,
         price: priceValue,
-        desiredCars: type === "TRADE" ? desiredCars : undefined,
+        desiredCarIds: type === "TRADE" ? desiredCars.map((c) => c.id) : undefined,
         description: description.trim() || undefined,
       });
       toast.success("Anúncio publicado.");

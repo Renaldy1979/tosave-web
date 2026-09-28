@@ -3,14 +3,14 @@
 import { LoadMore } from "@/components/app/load-more";
 import { NewsCard, NewsGridSkeleton } from "@/components/app/news-card";
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
-import { listNewsMock } from "@/app/sites/app/_mock/news";
+import { listNews } from "@/lib/news";
 import { useInfiniteList } from "@/lib/use-infinite-list";
 
 const PAGE_SIZE = 12;
 
 export function NoticiasView() {
-  const { items, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList("noticias", (cursor) =>
-    listNewsMock({ cursor, limit: PAGE_SIZE }).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
+  const { items, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList("noticias", (cursor, signal) =>
+    listNews({ cursor, limit: PAGE_SIZE }, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
   );
 
   return (

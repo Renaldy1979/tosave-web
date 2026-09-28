@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { unreadNotificationsCountMock } from "@/app/sites/app/_mock/notifications";
+import { getUnreadNotificationsCount } from "./notifications";
 
 type NotificationsUnreadContextValue = {
   count: number;
@@ -19,7 +19,7 @@ export function NotificationsUnreadProvider({ children }: { children: ReactNode 
 
   useEffect(() => {
     let alive = true;
-    unreadNotificationsCountMock()
+    getUnreadNotificationsCount()
       .then(({ count }) => {
         if (alive) setCount(count);
       })

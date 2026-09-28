@@ -4,16 +4,16 @@ import { ArrowLeft, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { cancelTradeListingMock, completeTradeListingMock, getTradeByIdMock, revealTradeContactMock } from "@/app/sites/app/_mock/trade";
 import { CarThumb } from "@/components/admin/car-thumb";
 import { TradeTypeBadge } from "@/components/app/trade-listing-card";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
-import { errorMessage } from "@/lib/api";
+import { ApiError, errorMessage } from "@/lib/api";
 import type { TradeListing } from "@/lib/app-types";
 import { useMe } from "@/lib/auth";
+import { cancelTradeListing, completeTradeListing, getTradeById, revealTradeContact } from "@/lib/trade";
 
 const STATUS_LABEL: Record<TradeListing["status"], string> = {
   ACTIVE: "",
@@ -41,19 +41,17 @@ export function AnuncioDetailView({ id }: { id: string }) {
 
   const load = useCallback(() => {
     setLoadState("loading");
-    getTradeByIdMock(id, me.id, me.name)
+    getTradeById(id)
       .then((item) => {
-        if (!item) {
-          setLoadState("not-found");
-          setListing(null);
-          return;
-        }
         setListing(item);
         setPhone(undefined);
         setLoadState("ok");
       })
-      .catch(() => setLoadState("error"));
-  }, [id, me.id, me.name]);
+      .catch((err: unknown) => {
+        setListing(null);
+        setLoadState(err instanceof ApiError && err.status === 404 ? "not-found" : "error");
+      });
+  }, [id]);
 
   useEffect(load, [load]);
 
@@ -63,7 +61,7 @@ export function AnuncioDetailView({ id }: { id: string }) {
     if (!listing) return;
     setRevealing(true);
     try {
-      const result = await revealTradeContactMock(listing.id);
+      const result = await revealTradeContact(listing.id);
       setPhone(result.phone);
     } catch (err) {
       toast.error(errorMessage(err));
@@ -76,7 +74,7 @@ export function AnuncioDetailView({ id }: { id: string }) {
     if (!listing) return;
     setCompleting(true);
     try {
-      setListing(await completeTradeListingMock(listing.id));
+      setListing(await completeTradeListing(listing.id));
       setCompleteOpen(false);
       toast.success("Anúncio finalizado.");
     } catch (err) {
@@ -90,7 +88,7 @@ export function AnuncioDetailView({ id }: { id: string }) {
     if (!listing) return;
     setCancelling(true);
     try {
-      setListing(await cancelTradeListingMock(listing.id));
+      setListing(await cancelTradeListing(listing.id));
       setCancelOpen(false);
       toast.success("Anúncio cancelado.");
     } catch (err) {

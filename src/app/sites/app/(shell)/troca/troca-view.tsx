@@ -2,7 +2,6 @@
 
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { listMyTradeMock, listTradeMock } from "@/app/sites/app/_mock/trade";
 import { LoadMore } from "@/components/app/load-more";
 import { TradeListingCard, TradeListingCardSkeleton } from "@/components/app/trade-listing-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { fieldClass } from "@/components/ui/input";
 import { SegmentedControl } from "@/components/ui/segmented";
 import type { TradeListing, TradeType } from "@/lib/app-types";
-import { useMe } from "@/lib/auth";
+import { listMyTrade, listTrade } from "@/lib/trade";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useInfiniteList } from "@/lib/use-infinite-list";
 
@@ -63,8 +62,8 @@ function Vitrine() {
   const search = useDebouncedValue(term.trim(), 300);
 
   const key = JSON.stringify({ typeFilter, search });
-  const { items, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList<TradeListing>(key, (cursor) =>
-    listTradeMock({ type: typeFilter === "all" ? undefined : typeFilter, q: search, cursor, limit: PAGE_SIZE }).then((page) => ({
+  const { items, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList<TradeListing>(key, (cursor, signal) =>
+    listTrade({ type: typeFilter === "all" ? undefined : typeFilter, q: search, cursor, limit: PAGE_SIZE }, signal).then((page) => ({
       items: page.items,
       nextCursor: page.nextCursor,
     }))
@@ -118,9 +117,8 @@ function Vitrine() {
 }
 
 function MeusAnuncios() {
-  const me = useMe();
-  const { items, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList<TradeListing>("meus-anuncios", (cursor) =>
-    listMyTradeMock(me.id, me.name, { cursor, limit: PAGE_SIZE }).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
+  const { items, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList<TradeListing>("meus-anuncios", (cursor, signal) =>
+    listMyTrade({ cursor, limit: PAGE_SIZE }, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
   );
 
   if (state === "loading") return <ListingGridSkeleton />;

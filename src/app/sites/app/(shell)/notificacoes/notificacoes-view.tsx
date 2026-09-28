@@ -4,18 +4,13 @@ import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import {
-  listNotificationsMock,
-  markAllNotificationsReadMock,
-  markNotificationReadMock,
-  notificationRoute,
-} from "@/app/sites/app/_mock/notifications";
 import { LoadMore } from "@/components/app/load-more";
 import { NotificationRow, NotificationRowSkeleton } from "@/components/app/notification-row";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { errorMessage } from "@/lib/api";
 import type { NotificationItem } from "@/lib/app-types";
+import { listNotifications, markAllNotificationsRead, markNotificationRead, notificationRoute } from "@/lib/notifications";
 import { useNotificationsUnread } from "@/lib/notifications-unread";
 import { useInfiniteList } from "@/lib/use-infinite-list";
 
@@ -28,7 +23,7 @@ export function NotificacoesView() {
 
   const { items, setItems, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList<NotificationItem>(
     "notificacoes",
-    (cursor) => listNotificationsMock({ cursor, limit: PAGE_SIZE }).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
+    (cursor, signal) => listNotifications({ cursor, limit: PAGE_SIZE }, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
   );
 
   const handleClick = useCallback(
@@ -36,7 +31,7 @@ export function NotificacoesView() {
       if (!item.read) {
         setItems((prev) => prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)));
         decrement(1);
-        markNotificationReadMock(item.id).catch(() => undefined);
+        markNotificationRead(item.id).catch(() => undefined);
       }
       const route = notificationRoute(item.type, item.targetId);
       if (route) router.push(route);
@@ -48,7 +43,7 @@ export function NotificacoesView() {
     if (unreadCount === 0 || markingAll) return;
     setMarkingAll(true);
     try {
-      await markAllNotificationsReadMock();
+      await markAllNotificationsRead();
       setItems((prev) => prev.map((n) => ({ ...n, read: true })));
       clear();
     } catch (err) {
