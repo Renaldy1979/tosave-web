@@ -35,6 +35,9 @@ export type PublicStats = { totalCars: number; totalSeries: number; totalMembers
 
 export type PublicFeaturedSerie = { id: string; title: string; description: string; imageFileId: string | null; carCount: number };
 
+/** `GET /v2/config`: config pública do app (`app_config`). Campo vazio = recurso escondido. */
+export type PublicConfig = { termsUrl: string; privacyUrl: string; supportEmail: string; passwordRecoveryUrl: string; minAppVersion: string };
+
 export class PublicApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -115,3 +118,5 @@ export const loadPublicStats = (opts: { revalidate?: number } = {}) => publicApi
 
 export const loadFeaturedSeries = (opts: { revalidate?: number } = {}) =>
   publicApi<PublicFeaturedSerie[]>("/v2/public/series", { revalidate: 300, ...opts });
+
+export const loadPublicConfig = (opts: { revalidate?: number } = {}) => publicApi<PublicConfig>("/v2/config", { revalidate: 300, ...opts });

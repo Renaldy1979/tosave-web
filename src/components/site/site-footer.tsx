@@ -20,8 +20,16 @@ export function SiteFooter() {
             <StoreBadges />
           </div>
         </div>
-        <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-caption text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} ToSave. Todos os direitos reservados.</p>
+        <div className="mt-10 flex flex-col gap-4 border-t border-border pt-6 text-caption text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p>© {year} ToSave. Todos os direitos reservados.</p>
+            <a href="/termos" className="hover:text-fg-muted">
+              Termos de Uso
+            </a>
+            <a href="/privacidade" className="hover:text-fg-muted">
+              Política de Privacidade
+            </a>
+          </div>
           <a href={`${APP_URL}/entrar`} className="hover:text-fg-muted">
             Já sou colecionador
           </a>

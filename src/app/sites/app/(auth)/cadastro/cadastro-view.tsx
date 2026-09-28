@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/feedback";
 import { Input, PasswordInput } from "@/components/ui/input";
 import { account, AppwriteException, appwriteErrorInfo, ID } from "@/lib/appwrite";
 import { cn } from "@/lib/cn";
+import { SITE_URL } from "@/lib/env";
 import { useGuestOnly } from "../use-guest-only";
 
 const schema = z
@@ -147,6 +148,18 @@ function CadastroForm() {
       <Button type="submit" size="lg" fullWidth loading={isSubmitting}>
         {isSubmitting ? "Criando conta…" : "Criar conta"}
       </Button>
+
+      <p className="text-center text-caption text-fg-subtle">
+        Ao criar a conta você concorda com os{" "}
+        <a href={`${SITE_URL}/termos`} className="font-medium text-primary-text hover:underline">
+          Termos de Uso
+        </a>{" "}
+        e a{" "}
+        <a href={`${SITE_URL}/privacidade`} className="font-medium text-primary-text hover:underline">
+          Política de Privacidade
+        </a>
+        .
+      </p>
 
       <p className="text-center text-body-sm text-fg-muted">
         Já tem conta?{" "}
