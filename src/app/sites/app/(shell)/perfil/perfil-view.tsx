@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowLeftRight, ChevronRight, FileText, Heart, Info, Lock, LogOut, Mail, Phone, ShieldCheck, Trash2, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, FileText, Heart, Info, Lock, LogOut, Mail, Phone, ShieldCheck, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -10,6 +10,7 @@ import { StatTile } from "@/components/app/stat-tile";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input, PasswordInput } from "@/components/ui/input";
+import { ListRow } from "@/components/ui/list-row";
 import { ThemeSegmented } from "@/components/ui/theme-toggle";
 import { account, AppwriteException, appwriteErrorInfo } from "@/lib/appwrite";
 import { errorMessage } from "@/lib/api";
@@ -21,58 +22,6 @@ import { deleteMyAccount, updateMyPhone, type DeleteAccountError } from "@/lib/m
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
-}
-
-function ListRow({
-  icon: Icon,
-  label,
-  value,
-  onClick,
-  href,
-  external,
-  danger,
-  showChevron = true,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value?: string;
-  onClick?: () => void;
-  href?: string;
-  external?: boolean;
-  danger?: boolean;
-  showChevron?: boolean;
-}) {
-  const content = (
-    <>
-      <Icon size={18} strokeWidth={1.75} className={danger ? "text-danger" : "text-fg-subtle"} aria-hidden />
-      <span className={`flex-1 text-body-sm font-medium ${danger ? "text-danger" : "text-fg"}`}>{label}</span>
-      {value ? <span className="truncate text-body-sm text-fg-subtle">{value}</span> : null}
-      {showChevron && (onClick || href) ? <ChevronRight size={16} strokeWidth={1.75} className="text-fg-subtle" aria-hidden /> : null}
-    </>
-  );
-  const cls = "flex min-h-13 items-center gap-3 border-b border-border px-4 last:border-b-0 text-left transition duration-fast hover:bg-surface-3/50";
-  if (href && external) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
-        {content}
-      </a>
-    );
-  }
-  if (href) {
-    return (
-      <Link href={href} className={cls}>
-        {content}
-      </Link>
-    );
-  }
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={`w-full ${cls}`}>
-        {content}
-      </button>
-    );
-  }
-  return <div className={cls}>{content}</div>;
 }
 
 export function PerfilView() {

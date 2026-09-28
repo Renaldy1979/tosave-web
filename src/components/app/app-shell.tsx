@@ -1,16 +1,17 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
-import { Bell, LogOut, MoreHorizontal } from "lucide-react";
+import { Bell, FileText, Info, LogOut, Mail, ShieldCheck, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Logo } from "@/components/ui/logo";
 import { ThemeSegmented, ThemeToggle } from "@/components/ui/theme-toggle";
+import { useAppConfig } from "@/lib/app-config";
 import { useAuth, useMe } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { useNotificationsUnread } from "@/lib/notifications-unread";
-import { APP_DESKTOP_NAV, APP_MOBILE_TABS, APP_MORE_ITEMS, APP_NOTIFICATIONS_HREF, isAppNavActive } from "./nav";
+import { APP_MOBILE_TABS, APP_NAV_ORDER, APP_NOTIFICATIONS_HREF, isAppMoreActive, isAppNavActive } from "./nav";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -43,12 +44,16 @@ function NotificationBell({ className }: { className?: string }) {
   );
 }
 
-/** Sidebar fixa do app (desktop `lg+`): mesmo padrão do AdminShell (componentes.md §7). */
+/** Sidebar fixa do app (desktop `lg+`): ordem oficial única, ajuda e sair separados (docs/briefings/navegacao-mais.md). */
 function Sidebar() {
   const pathname = usePathname();
   const me = useMe();
   const { signOut } = useAuth();
   const router = useRouter();
+  const { data: config } = useAppConfig();
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-62 flex-col border-r border-border bg-surface lg:flex">
       <div className="flex h-16 shrink-0 items-center justify-between px-5">
@@ -57,36 +62,56 @@ function Sidebar() {
         </Link>
         <NotificationBell />
       </div>
-      <nav aria-label="App" className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-        {APP_DESKTOP_NAV.map((group) => (
-          <div key={group.title}>
-            <p className="px-3 pb-1 font-condensed text-eyebrow text-fg-subtle uppercase">{group.title}</p>
+      <nav aria-label="App" className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+        {APP_NAV_ORDER.map(({ href, label, icon: Icon }) => {
+          const active = isAppNavActive(pathname, href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex h-11 items-center gap-3 rounded-md px-3 text-body font-medium transition duration-fast",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active ? "bg-primary-soft text-primary-text" : "text-fg-muted hover:bg-surface-3 hover:text-fg"
+              )}
+            >
+              {active ? <span aria-hidden className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r bg-primary" /> : null}
+              <Icon size={20} strokeWidth={1.75} aria-hidden />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="space-y-3 border-t border-border p-3">
+        {config && (config.supportEmail || config.privacyUrl || config.termsUrl) ? (
+          <div>
+            <p className="px-3 pb-1 font-condensed text-eyebrow text-fg-subtle uppercase">Ajuda e informações</p>
             <div className="space-y-0.5">
-              {group.items.map(({ href, label, icon: Icon }) => {
-                const active = isAppNavActive(pathname, href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "relative flex h-11 items-center gap-3 rounded-md px-3 text-body font-medium transition duration-fast",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      active ? "bg-primary-soft text-primary-text" : "text-fg-muted hover:bg-surface-3 hover:text-fg"
-                    )}
-                  >
-                    {active ? <span aria-hidden className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r bg-primary" /> : null}
-                    <Icon size={20} strokeWidth={1.75} aria-hidden />
-                    {label}
-                  </Link>
-                );
-              })}
+              {config.supportEmail ? <SidebarHelpLink icon={Mail} label="Falar com o suporte" href={`mailto:${config.supportEmail}`} /> : null}
+              {config.privacyUrl ? <SidebarHelpLink icon={ShieldCheck} label="Política de privacidade" href={config.privacyUrl} external /> : null}
+              {config.termsUrl ? <SidebarHelpLink icon={FileText} label="Termos de uso" href={config.termsUrl} external /> : null}
+              <div className="flex h-9 items-center gap-3 px-3 text-caption text-fg-subtle">
+                <Info size={16} strokeWidth={1.75} aria-hidden />
+                Sobre o ToSave · ToSave web
+              </div>
             </div>
           </div>
-        ))}
-      </nav>
-      <div className="space-y-3 border-t border-border p-3">
-        <ThemeSegmented />
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => setSignOutOpen(true)}
+          className="flex h-11 w-full items-center gap-3 rounded-md px-3 text-left text-body font-medium text-danger transition duration-fast hover:bg-surface-3"
+        >
+          <LogOut size={20} strokeWidth={1.75} aria-hidden />
+          Sair
+        </button>
+
+        <div className="flex items-center gap-3 border-t border-border pt-3">
+          <ThemeSegmented />
+        </div>
         <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-body-sm font-bold text-primary-text">
             {initials(me.name)}
@@ -95,20 +120,42 @@ function Sidebar() {
             <p className="truncate text-body-sm font-medium text-fg">{me.name}</p>
             <p className="truncate text-caption text-fg-subtle">{me.email}</p>
           </div>
-          <button
-            type="button"
-            aria-label="Sair"
-            title="Sair"
-            onClick={() => {
-              void signOut().then(() => router.push("/entrar"));
-            }}
-            className="flex size-9 items-center justify-center rounded-md text-fg-muted hover:bg-surface-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <LogOut size={18} strokeWidth={1.75} />
-          </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={signOutOpen}
+        onOpenChange={setSignOutOpen}
+        title="Sair da conta?"
+        confirmLabel="Sair"
+        loading={signingOut}
+        onConfirm={() => {
+          setSigningOut(true);
+          void signOut().then(() => router.push("/entrar"));
+        }}
+      >
+        <p>Você pode entrar de novo quando quiser com o mesmo e-mail e senha.</p>
+      </ConfirmDialog>
     </aside>
+  );
+}
+
+function SidebarHelpLink({ icon: Icon, label, href, external }: { icon: LucideIcon; label: string; href: string; external?: boolean }) {
+  const cls =
+    "flex h-9 items-center gap-3 rounded-md px-3 text-caption text-fg-muted transition duration-fast hover:bg-surface-3 hover:text-fg";
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
+        <Icon size={16} strokeWidth={1.75} aria-hidden />
+        {label}
+      </a>
+    );
+  }
+  return (
+    <a href={href} className={cls}>
+      <Icon size={16} strokeWidth={1.75} aria-hidden />
+      {label}
+    </a>
   );
 }
 
@@ -127,8 +174,8 @@ function MobileTopBar() {
   );
 }
 
-/** Barra inferior de 5 itens (componentes.md §7, TabBar): 4 diretos + "Mais". */
-function MobileTabBar({ onMoreClick, moreActive }: { onMoreClick: () => void; moreActive: boolean }) {
+/** Barra inferior de 5 itens (componentes.md §7, TabBar): 4 diretos + a página "Mais". */
+function MobileTabBar() {
   const pathname = usePathname();
   return (
     <nav
@@ -136,7 +183,7 @@ function MobileTabBar({ onMoreClick, moreActive }: { onMoreClick: () => void; mo
       className="ink fixed inset-x-0 bottom-0 z-40 flex h-16 items-stretch border-t border-white/5 pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       {APP_MOBILE_TABS.map(({ href, label, icon: Icon }) => {
-        const active = isAppNavActive(pathname, href);
+        const active = href === "/mais" ? isAppMoreActive(pathname) : isAppNavActive(pathname, href);
         return (
           <Link
             key={href}
@@ -152,85 +199,18 @@ function MobileTabBar({ onMoreClick, moreActive }: { onMoreClick: () => void; mo
           </Link>
         );
       })}
-      <button
-        type="button"
-        onClick={onMoreClick}
-        aria-haspopup="dialog"
-        className={cn(
-          "flex min-w-11 flex-1 flex-col items-center justify-center gap-0.5 text-caption transition duration-fast",
-          moreActive ? "text-primary" : "text-fg-subtle hover:text-fg-muted"
-        )}
-      >
-        <MoreHorizontal size={24} strokeWidth={1.75} aria-hidden />
-        Mais
-      </button>
     </nav>
-  );
-}
-
-/** Painel "Mais" do celular: Séries, Notícias, Estatísticas, Perfil e Sair. */
-function MoreSheet({ open, onOpenChange, pathname }: { open: boolean; onOpenChange: (open: boolean) => void; pathname: string }) {
-  const router = useRouter();
-  const { signOut } = useAuth();
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-60 animate-fade-in bg-overlay/70 backdrop-blur-sm lg:hidden" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-60 animate-fade-in rounded-t-xl border border-border bg-surface pb-[max(1rem,env(safe-area-inset-bottom))] shadow-modal focus:outline-none lg:hidden"
-        >
-          <Dialog.Title className="sr-only">Mais</Dialog.Title>
-          <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-surface-3" aria-hidden />
-          <nav aria-label="Mais" className="mt-2 space-y-0.5 px-3 pt-1 pb-2">
-            {APP_MORE_ITEMS.map(({ href, label, icon: Icon }) => {
-              const active = isAppNavActive(pathname, href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => onOpenChange(false)}
-                  className={cn(
-                    "flex h-12 items-center gap-3 rounded-md px-3 text-body font-medium transition duration-fast",
-                    active ? "bg-primary-soft text-primary-text" : "text-fg hover:bg-surface-3"
-                  )}
-                >
-                  <Icon size={20} strokeWidth={1.75} aria-hidden />
-                  {label}
-                </Link>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => {
-                onOpenChange(false);
-                void signOut().then(() => router.push("/entrar"));
-              }}
-              className="flex h-12 w-full items-center gap-3 rounded-md px-3 text-left text-body font-medium text-danger transition duration-fast hover:bg-surface-3"
-            >
-              <LogOut size={20} strokeWidth={1.75} aria-hidden />
-              Sair
-            </button>
-          </nav>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
   );
 }
 
 /** Casca do app do colecionador: sidebar fixa no desktop, navbar + tab bar no celular. */
 export function AppShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreActive = APP_MORE_ITEMS.some((item) => isAppNavActive(pathname, item.href));
-
   return (
     <div className="min-h-dvh bg-bg lg:pl-62">
       <Sidebar />
       <MobileTopBar />
       <main className="pb-20 lg:pb-0">{children}</main>
-      <MobileTabBar onMoreClick={() => setMoreOpen(true)} moreActive={moreActive} />
-      <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} pathname={pathname} />
+      <MobileTabBar />
     </div>
   );
 }

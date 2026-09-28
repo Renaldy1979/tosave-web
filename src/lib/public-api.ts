@@ -119,4 +119,5 @@ export const loadPublicStats = (opts: { revalidate?: number } = {}) => publicApi
 export const loadFeaturedSeries = (opts: { revalidate?: number } = {}) =>
   publicApi<PublicFeaturedSerie[]>("/v2/public/series", { revalidate: 300, ...opts });
 
-export const loadPublicConfig = (opts: { revalidate?: number } = {}) => publicApi<PublicConfig>("/v2/config", { revalidate: 300, ...opts });
+export const loadPublicConfig = (opts: { revalidate?: number; signal?: AbortSignal } = {}) =>
+  publicApi<PublicConfig>("/v2/config", { revalidate: 300, ...opts });
