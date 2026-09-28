@@ -17,7 +17,7 @@ export function HomeView() {
     <div>
       <div className="ink relative overflow-hidden px-4 pt-6 pb-8 sm:px-6 lg:px-8 lg:pt-10">
         <span aria-hidden className="absolute inset-0 bg-hero-glow" />
-        <div className="relative mx-auto max-w-[1280px]">
+        <div className="relative mx-auto max-w-[1440px]">
           <p className="text-body-sm text-ink-fg/60">Olá, {firstName}</p>
           <h1 className="mt-0.5 font-display text-h1 text-fg italic lg:text-display-lg">O que vamos garimpar hoje?</h1>
 
@@ -29,14 +29,14 @@ export function HomeView() {
             Buscar por nome ou código
           </Link>
 
-          <div className="mt-8">
+          <div className="mt-8 min-w-0">
             <div className="mb-3 flex items-center justify-between">
               <p className="font-condensed text-eyebrow text-ink-fg/60 uppercase">Séries em destaque</p>
               <Link href="/series" className="text-body-sm font-medium text-primary-text hover:underline">
                 Ver tudo
               </Link>
             </div>
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" style={{ scrollSnapType: "x mandatory" }}>
+            <div className="-mx-4 flex min-w-0 gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" style={{ scrollSnapType: "x mandatory" }}>
               {featuredSeries.map((serie) => (
                 <div key={serie.id} style={{ scrollSnapAlign: "start" }}>
                   <SeriesCard

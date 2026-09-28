@@ -113,7 +113,7 @@ export function PerfilView() {
         <p className="mb-2 font-condensed text-eyebrow text-fg-subtle uppercase">Conta</p>
         <div className="overflow-hidden rounded-lg border border-border bg-surface">
           <ListRow icon={Heart} label="Minha coleção" href="/colecao" />
-          <ListRow icon={ArrowLeftRight} label="Clube da Troca" value="Em breve" showChevron={false} />
+          <ListRow icon={ArrowLeftRight} label="Clube da Troca" href="/troca" />
           <ListRow icon={Mail} label="E-mail" value={email} showChevron={false} />
           <ListRow icon={Phone} label="Telefone (WhatsApp)" value={phone || "Não cadastrado"} onClick={() => setPhoneOpen(true)} />
           <ListRow icon={Lock} label="Alterar senha" onClick={() => setPasswordOpen(true)} />

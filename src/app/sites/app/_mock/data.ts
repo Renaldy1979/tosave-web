@@ -196,6 +196,9 @@ export const MOCK_USER = {
   phone: "(11) 98765-4321",
 };
 
+/** Contagem de não lidas do sino de notificações (lote 5b troca pela API v2). */
+export const MOCK_UNREAD_NOTIFICATIONS = 3;
+
 export function carCountBySerie(serieId: string): number {
   return MOCK_CARS.filter((c) => c.serieId === serieId).length;
 }

@@ -51,14 +51,14 @@ export function CarDetailView({ id }: { id: string }) {
         Voltar
       </Link>
 
-      <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
-        <div className="lg:sticky lg:top-8">
+      <div className="mt-4 grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
+        <div className="min-w-0 lg:sticky lg:top-8">
           <div className="flex aspect-square items-center justify-center rounded-lg bg-card-stage sm:aspect-video lg:aspect-square">
             <Car size={64} strokeWidth={1.5} className="text-fg-subtle/40" aria-hidden />
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <p className="font-condensed text-eyebrow text-fg-subtle uppercase">{eyebrow}</p>
           <h1 className="mt-1 font-display text-display-xl font-extrabold text-fg italic">{car.title}</h1>
 
@@ -137,14 +137,14 @@ export function CarDetailView({ id }: { id: string }) {
       </div>
 
       {related.length > 0 ? (
-        <div className="mt-10">
+        <div className="mt-10 min-w-0">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-h2 text-fg">Mais da série</h2>
             <Link href={`/series/${car.serieId}`} className="text-body-sm font-medium text-primary-text hover:underline">
               Ver tudo
             </Link>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="flex min-w-0 gap-3 overflow-x-auto pb-1">
             {related.map((item) => (
               <div key={item.id} className="w-[160px] shrink-0">
                 <CarCard car={item} isFavorite={collection.quantityOf(item.id) > 0} onToggleFavorite={() => collection.toggle(item.id)} />
