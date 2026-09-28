@@ -1,26 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { account } from "@/lib/appwrite";
+import { useEffect } from "react";
+import { useAuth } from "@/lib/auth";
 
-/** `/entrar` e `/cadastro` são só para visitante: já logado, manda para `/boas-vindas`. */
+/** `/entrar`, `/cadastro` e `/recuperar-senha` são só para visitante: já logado, manda para `/`. */
 export function useGuestOnly(): boolean {
+  const { state } = useAuth();
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+
   useEffect(() => {
-    let alive = true;
-    account.get().then(
-      () => {
-        if (alive) router.replace("/boas-vindas");
-      },
-      () => {
-        if (alive) setChecking(false);
-      }
-    );
-    return () => {
-      alive = false;
-    };
-  }, [router]);
-  return checking;
+    if (state.status === "ready" || state.status === "forbidden") router.replace("/");
+  }, [state.status, router]);
+
+  return state.status === "loading" || state.status === "ready" || state.status === "forbidden";
 }

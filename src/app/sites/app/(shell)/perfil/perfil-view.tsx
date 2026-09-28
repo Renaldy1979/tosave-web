@@ -11,9 +11,12 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input, PasswordInput } from "@/components/ui/input";
 import { ThemeSegmented } from "@/components/ui/theme-toggle";
-import { MOCK_USER } from "../../_mock/data";
-import { useCollectionStore } from "../../_mock/collection-store";
+import { account, AppwriteException, appwriteErrorInfo } from "@/lib/appwrite";
+import { errorMessage } from "@/lib/api";
+import { useAuth, useMe } from "@/lib/auth";
+import { useCollectionSummary } from "@/lib/collection-summary";
 import { SITE_URL } from "@/lib/env";
+import { deleteMyAccount, updateMyPhone, type DeleteAccountError } from "@/lib/me";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -74,10 +77,10 @@ function ListRow({
 
 export function PerfilView() {
   const router = useRouter();
-  const collection = useCollectionStore();
-  const [name, setName] = useState(MOCK_USER.name);
-  const [email, setEmail] = useState(MOCK_USER.email);
-  const [phone, setPhone] = useState(MOCK_USER.phone);
+  const me = useMe();
+  const { signOut, reload } = useAuth();
+  const { summary } = useCollectionSummary();
+  const [phone, setPhone] = useState(me.phone ?? "");
   const [editOpen, setEditOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -89,19 +92,19 @@ export function PerfilView() {
 
       <div className="mt-6 flex flex-col items-center gap-2 text-center">
         <span className="flex size-22 items-center justify-center rounded-full bg-primary-soft font-display text-display-lg font-bold text-primary-text ring-2 ring-flame/60">
-          {initials(name)}
+          {initials(me.name)}
         </span>
-        <h2 className="mt-1 font-display text-h2 text-fg">{name}</h2>
-        <p className="text-body-sm text-fg-muted">{email}</p>
+        <h2 className="mt-1 font-display text-h2 text-fg">{me.name}</h2>
+        <p className="text-body-sm text-fg-muted">{me.email}</p>
         <Button variant="outline" size="sm" className="mt-1" onClick={() => setEditOpen(true)}>
           Editar perfil
         </Button>
       </div>
 
       <div className="mt-8 flex rounded-lg border border-border bg-surface p-3">
-        <StatTile value={collection.summary.totalItems} label="Itens" href="/colecao" />
-        <StatTile value={collection.summary.totalModels} label="Modelos" href="/colecao" />
-        <StatTile value={collection.summary.duplicates} label="Repetidos" href="/colecao" />
+        <StatTile value={summary.totalItems} label="Itens" href="/colecao" />
+        <StatTile value={summary.totalModels} label="Modelos" href="/colecao" />
+        <StatTile value={summary.duplicates} label="Repetidos" href="/colecao" />
       </div>
 
       <div className="mt-8">
@@ -114,12 +117,20 @@ export function PerfilView() {
         <div className="overflow-hidden rounded-lg border border-border bg-surface">
           <ListRow icon={Heart} label="Minha coleção" href="/colecao" />
           <ListRow icon={ArrowLeftRight} label="Clube da Troca" href="/troca" />
-          <ListRow icon={Mail} label="E-mail" value={email} showChevron={false} />
+          <ListRow icon={Mail} label="E-mail" value={me.email} showChevron={false} />
           <ListRow icon={Phone} label="Telefone (WhatsApp)" value={phone || "Não cadastrado"} onClick={() => setPhoneOpen(true)} />
           <ListRow icon={Lock} label="Alterar senha" onClick={() => setPasswordOpen(true)} />
         </div>
         <div className="mt-3 overflow-hidden rounded-lg border border-border bg-surface">
-          <ListRow icon={LogOut} label="Sair" danger showChevron={false} onClick={() => router.push("/entrar")} />
+          <ListRow
+            icon={LogOut}
+            label="Sair"
+            danger
+            showChevron={false}
+            onClick={() => {
+              void signOut().then(() => router.push("/entrar"));
+            }}
+          />
         </div>
       </div>
 
@@ -144,48 +155,40 @@ export function PerfilView() {
         </Link>
       </div>
 
-      <EditProfileSheet
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        name={name}
-        email={email}
-        onSave={(nextName, nextEmail) => {
-          setName(nextName);
-          setEmail(nextEmail);
-          setEditOpen(false);
-          toast.success("Perfil atualizado.");
-        }}
-      />
+      <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} name={me.name} email={me.email} onSaved={reload} />
 
       <PhoneSheet
         open={phoneOpen}
         onClose={() => setPhoneOpen(false)}
         phone={phone}
-        onSave={(next) => {
-          setPhone(next);
-          setPhoneOpen(false);
-          toast.success("Telefone atualizado.");
+        onSave={async (next) => {
+          try {
+            const result = await updateMyPhone(next || null);
+            setPhone(result.phone ?? "");
+            setPhoneOpen(false);
+            toast.success("Telefone atualizado.");
+          } catch (err) {
+            toast.error(errorMessage(err));
+          }
         }}
       />
 
       <PasswordSheet
         open={passwordOpen}
         onClose={() => setPasswordOpen(false)}
-        onSave={() => {
+        onSaved={() => {
           setPasswordOpen(false);
           toast.success("Senha alterada.");
         }}
       />
 
-      <ConfirmDialog
+      <DeleteAccountDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title="Excluir conta?"
-        confirmLabel="Excluir conta"
-        onConfirm={() => setDeleteOpen(false)}
-      >
-        Sua conta e sua coleção são apagadas para sempre. Essa ação não pode ser desfeita.
-      </ConfirmDialog>
+        onDeleted={() => {
+          void signOut().then(() => router.push("/entrar"));
+        }}
+      />
     </div>
   );
 }
@@ -220,17 +223,44 @@ function EditProfileSheet({
   onClose,
   name,
   email,
-  onSave,
+  onSaved,
 }: {
   open: boolean;
   onClose: () => void;
   name: string;
   email: string;
-  onSave: (name: string, email: string) => void;
+  onSaved: () => void;
 }) {
   const [draftName, setDraftName] = useState(name);
   const [draftEmail, setDraftEmail] = useState(email);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const dirty = draftName.trim() !== name.trim() || draftEmail.trim() !== email.trim();
+
+  const handleSave = async () => {
+    const emailChanged = draftEmail.trim().toLowerCase() !== email.toLowerCase();
+    if (emailChanged) {
+      setEmailError("Para trocar o e-mail, fale com o suporte.");
+      return;
+    }
+    setEmailError(null);
+    if (draftName.trim() === name.trim()) {
+      onClose();
+      return;
+    }
+    setSaving(true);
+    try {
+      await account.updateName({ name: draftName.trim() });
+      onSaved();
+      onClose();
+      toast.success("Perfil atualizado.");
+    } catch {
+      toast.error("Não foi possível salvar agora. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SheetShell
       open={open}
@@ -238,23 +268,24 @@ function EditProfileSheet({
       title="Editar perfil"
       footer={
         <div className="flex gap-2">
-          <Button variant="ghost" fullWidth onClick={onClose}>
+          <Button variant="ghost" fullWidth onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth disabled={!dirty || !draftName.trim() || !draftEmail.trim()} onClick={() => onSave(draftName.trim(), draftEmail.trim())}>
+          <Button fullWidth disabled={!dirty || !draftName.trim() || !draftEmail.trim() || saving} loading={saving} onClick={() => void handleSave()}>
             Salvar
           </Button>
         </div>
       }
     >
       <Input label="Nome" value={draftName} onChange={(e) => setDraftName(e.target.value)} />
-      <Input label="E-mail" type="email" value={draftEmail} onChange={(e) => setDraftEmail(e.target.value)} />
+      <Input label="E-mail" type="email" value={draftEmail} error={emailError ?? undefined} onChange={(e) => setDraftEmail(e.target.value)} />
     </SheetShell>
   );
 }
 
-function PhoneSheet({ open, onClose, phone, onSave }: { open: boolean; onClose: () => void; phone: string; onSave: (phone: string) => void }) {
+function PhoneSheet({ open, onClose, phone, onSave }: { open: boolean; onClose: () => void; phone: string; onSave: (phone: string) => Promise<void> }) {
   const [draft, setDraft] = useState(phone);
+  const [saving, setSaving] = useState(false);
   return (
     <SheetShell
       open={open}
@@ -262,10 +293,18 @@ function PhoneSheet({ open, onClose, phone, onSave }: { open: boolean; onClose: 
       title="Telefone (WhatsApp)"
       footer={
         <div className="flex gap-2">
-          <Button variant="ghost" fullWidth onClick={onClose}>
+          <Button variant="ghost" fullWidth onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth onClick={() => onSave(draft.trim())}>
+          <Button
+            fullWidth
+            loading={saving}
+            onClick={async () => {
+              setSaving(true);
+              await onSave(draft.trim());
+              setSaving(false);
+            }}
+          >
             Salvar
           </Button>
         </div>
@@ -276,10 +315,54 @@ function PhoneSheet({ open, onClose, phone, onSave }: { open: boolean; onClose: 
   );
 }
 
-function PasswordSheet({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: () => void }) {
+type PasswordChangeError = "wrong_password" | "weak_password" | "rate_limited" | "network" | "unknown";
+
+function mapPasswordChangeError(err: unknown): PasswordChangeError {
+  if (!(err instanceof AppwriteException)) return "network";
+  const { status, type } = appwriteErrorInfo(err);
+  if (status === 429) return "rate_limited";
+  if (type === "user_invalid_credentials" || status === 401) return "wrong_password";
+  if (type === "general_argument_invalid") return "weak_password";
+  return "unknown";
+}
+
+const PASSWORD_ERROR_TEXT: Record<Exclude<PasswordChangeError, "wrong_password">, string> = {
+  weak_password: "Senha fraca. Use pelo menos 8 caracteres.",
+  rate_limited: "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+  network: "Não foi possível alterar sua senha agora. Tente novamente.",
+  unknown: "Não foi possível alterar sua senha agora. Tente novamente.",
+};
+
+function PasswordSheet({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
+  const [currentError, setCurrentError] = useState<string | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const valid = current.length > 0 && next.length >= 8;
+
+  const handleSave = async () => {
+    setBanner(null);
+    setCurrentError(null);
+    setSaving(true);
+    try {
+      await account.updatePassword({ password: next, oldPassword: current });
+      setCurrent("");
+      setNext("");
+      onSaved();
+    } catch (err) {
+      const mapped = mapPasswordChangeError(err);
+      if (mapped === "wrong_password") {
+        setCurrentError("Senha atual incorreta.");
+        setCurrent("");
+      } else {
+        setBanner(PASSWORD_ERROR_TEXT[mapped]);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SheetShell
       open={open}
@@ -287,17 +370,76 @@ function PasswordSheet({ open, onClose, onSave }: { open: boolean; onClose: () =
       title="Alterar senha"
       footer={
         <div className="flex gap-2">
-          <Button variant="ghost" fullWidth onClick={onClose}>
+          <Button variant="ghost" fullWidth onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth disabled={!valid} onClick={onSave}>
+          <Button fullWidth disabled={!valid || saving} loading={saving} onClick={() => void handleSave()}>
             Salvar
           </Button>
         </div>
       }
     >
-      <PasswordInput label="Senha atual" value={current} onChange={(e) => setCurrent(e.target.value)} />
+      <PasswordInput label="Senha atual" value={current} error={currentError ?? undefined} onChange={(e) => setCurrent(e.target.value)} />
       <PasswordInput label="Nova senha" hint="Mínimo de 8 caracteres." value={next} onChange={(e) => setNext(e.target.value)} />
+      {banner ? <p className="text-body-sm text-danger">{banner}</p> : null}
     </SheetShell>
+  );
+}
+
+const DELETE_ERROR_TEXT: Record<Exclude<DeleteAccountError, "wrong_password">, string> = {
+  rate_limited: "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
+  network: "Sem conexão. Verifique sua internet e tente novamente.",
+  unknown: "Não foi possível excluir sua conta agora. Tente novamente.",
+};
+
+function DeleteAccountDialog({ open, onOpenChange, onDeleted }: { open: boolean; onOpenChange: (open: boolean) => void; onDeleted: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!password) {
+      setError("Informe sua senha.");
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    const result = await deleteMyAccount(password);
+    setLoading(false);
+    if (result.ok) {
+      setPassword("");
+      onDeleted();
+      return;
+    }
+    if (result.error === "wrong_password") {
+      setError("Senha incorreta.");
+      setPassword("");
+    } else {
+      setError(DELETE_ERROR_TEXT[result.error]);
+    }
+  };
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!loading) {
+          onOpenChange(o);
+          if (!o) {
+            setPassword("");
+            setError(null);
+          }
+        }
+      }}
+      title="Excluir conta?"
+      confirmLabel="Excluir conta"
+      onConfirm={() => void handleConfirm()}
+      loading={loading}
+    >
+      <p>Sua conta e sua coleção são apagadas para sempre. Essa ação não pode ser desfeita.</p>
+      <div className="mt-4 text-left">
+        <PasswordInput label="Senha atual" placeholder="••••••••" value={password} error={error ?? undefined} onChange={(e) => setPassword(e.target.value)} />
+      </div>
+    </ConfirmDialog>
   );
 }

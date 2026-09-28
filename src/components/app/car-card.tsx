@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { CarThumb } from "@/components/admin/car-thumb";
 import { Badge } from "@/components/ui/badge";
-import type { MockCar } from "@/app/sites/app/_mock/data";
+import type { CarItem } from "@/lib/app-types";
 import { cn } from "@/lib/cn";
 import { FavoriteButton } from "./favorite-button";
 import { QuantityStepper } from "./quantity-stepper";
 
 type CarCardProps = {
-  car: MockCar;
+  car: CarItem;
   variant?: "catalog" | "collection" | "compact";
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
@@ -34,7 +34,7 @@ export function CarCard({
         href={`/car/${car.id}`}
         className="group flex items-center gap-3 rounded-lg p-2 transition duration-fast hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <CarThumb fileId={null} alt={car.title} iconSize={20} className="size-14 shrink-0 rounded-md" />
+        <CarThumb fileId={car.imageFileId} alt={car.title} iconSize={20} className="size-14 shrink-0 rounded-md" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-body-sm font-semibold text-fg">{car.title}</p>
           <p className="truncate font-mono text-caption text-fg-subtle">{car.toy}</p>
@@ -54,7 +54,7 @@ export function CarCard({
     >
       <div className="relative">
         <CarThumb
-          fileId={null}
+          fileId={car.imageFileId}
           alt={car.title}
           iconSize={36}
           priority={priority}

@@ -1,25 +1,59 @@
 "use client";
 
 import { Layers } from "lucide-react";
-import { useMemo, useState } from "react";
-import { CarCard } from "@/components/app/car-card";
+import { useEffect, useState } from "react";
+import { CarCard, CarGridSkeleton } from "@/components/app/car-card";
+import { LoadMore } from "@/components/app/load-more";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/feedback";
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { MOCK_CARS, MOCK_SERIES } from "../../../_mock/data";
-import { useCollectionStore } from "../../../_mock/collection-store";
+import { ApiError } from "@/lib/api";
+import { getSerie, getSerieCars, type SerieCarsFilter } from "@/lib/app-catalog";
+import type { Serie } from "@/lib/app-types";
+import { useCollectionMutations } from "@/lib/collection-summary";
+import { useInfiniteList } from "@/lib/use-infinite-list";
 
 type Filtro = "todos" | "colecao" | "faltam";
+const FILTER_API: Record<Filtro, SerieCarsFilter> = { todos: "all", colecao: "owned", faltam: "missing" };
+const PAGE_SIZE = 20;
+
+type Counts = { total: number; owned: number; missing: number };
+const ZERO_COUNTS: Counts = { total: 0, owned: 0, missing: 0 };
 
 export function SerieDetailView({ id }: { id: string }) {
-  const collection = useCollectionStore();
+  const { toggle } = useCollectionMutations();
   const [filtro, setFiltro] = useState<Filtro>("todos");
 
-  const serie = MOCK_SERIES.find((s) => s.id === id);
-  const serieCars = useMemo(() => MOCK_CARS.filter((c) => c.serieId === id), [id]);
+  const [serie, setSerie] = useState<Serie | null>(null);
+  const [serieState, setSerieState] = useState<"loading" | "ok" | "not-found" | "error">("loading");
 
-  if (!serie) {
+  const loadSerie = () => {
+    setSerieState("loading");
+    getSerie(id)
+      .then((s) => {
+        setSerie(s);
+        setSerieState("ok");
+      })
+      .catch((err) => setSerieState(err instanceof ApiError && err.status === 404 ? "not-found" : "error"));
+  };
+  useEffect(loadSerie, [id]);
+
+  const {
+    items: cars,
+    setItems: setCars,
+    extra: counts,
+    state: listState,
+    hasMore,
+    loadingMore,
+    moreError,
+    loadMore,
+    reload: reloadCars,
+  } = useInfiniteList(`${id}:${filtro}`, (cursor, signal) =>
+    getSerieCars(id, FILTER_API[filtro], cursor, PAGE_SIZE, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor, extra: page.counts }))
+  );
+
+  if (serieState === "not-found") {
     return (
       <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-5 md:px-6 lg:px-8">
         <EmptyState kind="no-content" action={<ButtonLink href="/series">Ver todas as séries</ButtonLink>} />
@@ -27,17 +61,32 @@ export function SerieDetailView({ id }: { id: string }) {
     );
   }
 
-  const total = serieCars.length;
-  const ownedCount = serieCars.filter((c) => collection.quantityOf(c.id) > 0).length;
-  const missingCount = total - ownedCount;
-  const complete = total > 0 && ownedCount === total;
-  const percent = total > 0 ? Math.round((ownedCount / total) * 100) : 0;
+  if (serieState === "error") {
+    return (
+      <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-5 md:px-6 lg:px-8">
+        <ErrorState onRetry={loadSerie} />
+      </div>
+    );
+  }
 
-  const visible = serieCars.filter((c) => {
-    if (filtro === "colecao") return collection.quantityOf(c.id) > 0;
-    if (filtro === "faltam") return collection.quantityOf(c.id) === 0;
-    return true;
-  });
+  if (serieState === "loading" || !serie) {
+    return (
+      <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-8">
+        <div className="flex flex-col items-center gap-2">
+          <div className="skeleton size-24 rounded-full" />
+          <div className="skeleton h-7 w-48" />
+          <div className="skeleton h-4 w-64" />
+        </div>
+        <div className="mt-6">
+          <CarGridSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  const { total, owned, missing } = counts ?? ZERO_COUNTS;
+  const complete = total > 0 && owned === total;
+  const percent = total > 0 ? Math.round((owned / total) * 100) : 0;
 
   const empty =
     filtro === "colecao" ? (
@@ -66,7 +115,7 @@ export function SerieDetailView({ id }: { id: string }) {
                 </>
               ) : (
                 <>
-                  Você tem <span className="font-display font-extrabold text-accent">{ownedCount}</span> de {total}
+                  Você tem <span className="font-display font-extrabold text-accent">{owned}</span> de {total}
                 </>
               )}
             </p>
@@ -94,27 +143,36 @@ export function SerieDetailView({ id }: { id: string }) {
             onChange={setFiltro}
             options={[
               { value: "todos", label: `Todos ${total}` },
-              { value: "colecao", label: `Na coleção ${ownedCount}` },
-              { value: "faltam", label: `Faltam ${missingCount}` },
+              { value: "colecao", label: `Na coleção ${owned}` },
+              { value: "faltam", label: `Faltam ${missing}` },
             ]}
           />
         </div>
       ) : null}
 
       <div className="mt-6 lg:mt-8">
-        {visible.length === 0 ? (
+        {listState === "loading" ? (
+          <CarGridSkeleton />
+        ) : listState === "error" ? (
+          <ErrorState onRetry={reloadCars} />
+        ) : cars.length === 0 ? (
           empty
         ) : (
-          <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-5">
-            {visible.map((car) => (
-              <CarCard
-                key={car.id}
-                car={car}
-                isFavorite={collection.quantityOf(car.id) > 0}
-                onToggleFavorite={() => collection.toggle(car.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-5">
+              {cars.map((car) => (
+                <CarCard
+                  key={car.id}
+                  car={car}
+                  isFavorite={car.quantity > 0}
+                  onToggleFavorite={() =>
+                    toggle(car.id, car.quantity, (q) => setCars((prev) => prev.map((c) => (c.id === car.id ? { ...c, quantity: q, owned: q > 0 } : c))))
+                  }
+                />
+              ))}
+            </div>
+            <LoadMore hasMore={hasMore} loading={loadingMore} error={moreError} onLoadMore={loadMore} />
+          </>
         )}
       </div>
     </div>

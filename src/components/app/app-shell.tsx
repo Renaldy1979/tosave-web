@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Logo } from "@/components/ui/logo";
 import { ThemeSegmented, ThemeToggle } from "@/components/ui/theme-toggle";
-import { MOCK_UNREAD_NOTIFICATIONS, MOCK_USER } from "@/app/sites/app/_mock/data";
+import { useAuth, useMe } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { APP_DESKTOP_NAV, APP_MOBILE_TABS, APP_MORE_ITEMS, APP_NOTIFICATIONS_HREF, isAppNavActive } from "./nav";
 
@@ -17,27 +17,18 @@ function initials(name: string): string {
   return ((parts[0][0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
-/** Sino de notificações com badge de não lidas (celular e desktop). */
+/** Sino de notificações (celular e desktop). A caixa e o contador de não lidas chegam no lote 5b. */
 function NotificationBell({ className }: { className?: string }) {
-  const unread = MOCK_UNREAD_NOTIFICATIONS;
   return (
     <Link
       href={APP_NOTIFICATIONS_HREF}
-      aria-label={unread > 0 ? `Notificações, ${unread} não lidas` : "Notificações"}
+      aria-label="Notificações"
       className={cn(
         "relative flex size-10 shrink-0 items-center justify-center rounded-md text-fg-muted transition duration-fast hover:bg-surface-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
     >
       <Bell size={20} strokeWidth={1.75} aria-hidden />
-      {unread > 0 ? (
-        <span
-          aria-hidden
-          className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-flame px-1 font-mono text-[10px] font-bold text-white"
-        >
-          {unread > 9 ? "9+" : unread}
-        </span>
-      ) : null}
     </Link>
   );
 }
@@ -45,6 +36,9 @@ function NotificationBell({ className }: { className?: string }) {
 /** Sidebar fixa do app (desktop `lg+`): mesmo padrão do AdminShell (componentes.md §7). */
 function Sidebar() {
   const pathname = usePathname();
+  const me = useMe();
+  const { signOut } = useAuth();
+  const router = useRouter();
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-62 flex-col border-r border-border bg-surface lg:flex">
       <div className="flex h-16 shrink-0 items-center justify-between px-5">
@@ -85,20 +79,23 @@ function Sidebar() {
         <ThemeSegmented />
         <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-body-sm font-bold text-primary-text">
-            {initials(MOCK_USER.name)}
+            {initials(me.name)}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-body-sm font-medium text-fg">{MOCK_USER.name}</p>
-            <p className="truncate text-caption text-fg-subtle">{MOCK_USER.email}</p>
+            <p className="truncate text-body-sm font-medium text-fg">{me.name}</p>
+            <p className="truncate text-caption text-fg-subtle">{me.email}</p>
           </div>
-          <Link
-            href="/entrar"
+          <button
+            type="button"
             aria-label="Sair"
             title="Sair"
+            onClick={() => {
+              void signOut().then(() => router.push("/entrar"));
+            }}
             className="flex size-9 items-center justify-center rounded-md text-fg-muted hover:bg-surface-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <LogOut size={18} strokeWidth={1.75} />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
@@ -164,6 +161,7 @@ function MobileTabBar({ onMoreClick, moreActive }: { onMoreClick: () => void; mo
 /** Painel "Mais" do celular: Séries, Notícias, Estatísticas, Perfil e Sair. */
 function MoreSheet({ open, onOpenChange, pathname }: { open: boolean; onOpenChange: (open: boolean) => void; pathname: string }) {
   const router = useRouter();
+  const { signOut } = useAuth();
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -196,7 +194,7 @@ function MoreSheet({ open, onOpenChange, pathname }: { open: boolean; onOpenChan
               type="button"
               onClick={() => {
                 onOpenChange(false);
-                router.push("/entrar");
+                void signOut().then(() => router.push("/entrar"));
               }}
               className="flex h-12 w-full items-center gap-3 rounded-md px-3 text-left text-body font-medium text-danger transition duration-fast hover:bg-surface-3"
             >

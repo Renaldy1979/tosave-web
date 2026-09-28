@@ -1,23 +1,33 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { LoadMore } from "@/components/app/load-more";
 import { SeriesRow } from "@/components/app/series-card";
-import { EmptyState } from "@/components/ui/feedback";
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { fieldClass } from "@/components/ui/input";
-import { MOCK_SERIES, carCountBySerie, ownedCountBySerie } from "../../_mock/data";
-import { useCollectionStore } from "../../_mock/collection-store";
+import { listSeries } from "@/lib/app-catalog";
+import type { Serie } from "@/lib/app-types";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
+import { useInfiniteList } from "@/lib/use-infinite-list";
 
-const SORTED_SERIES = [...MOCK_SERIES].sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
+const PAGE_SIZE = 30;
+
+function SeriesRowSkeleton() {
+  return <div className="skeleton h-[72px] rounded-lg" />;
+}
 
 export function SeriesView() {
-  const collection = useCollectionStore();
   const [term, setTerm] = useState("");
+  const search = useDebouncedValue(term.trim(), 300);
 
-  const results = useMemo(() => {
-    const q = term.trim().toLowerCase();
-    return q ? SORTED_SERIES.filter((s) => s.title.toLowerCase().includes(q)) : SORTED_SERIES;
-  }, [term]);
+  const { items, extra: total, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList<Serie, number>(
+    search,
+    (cursor, signal) =>
+      listSeries({ q: search, cursor, limit: PAGE_SIZE }, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor, extra: page.total ?? undefined }))
+  );
+
+  const searching = search.length > 0;
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-8">
@@ -34,26 +44,32 @@ export function SeriesView() {
           className={`${fieldClass} pl-10`}
         />
       </div>
-      <p className="mt-3 text-body-sm text-fg-subtle">
-        {results.length} {results.length === 1 ? "série" : "séries"}
-      </p>
+      {state === "ok" && total !== undefined ? (
+        <p className="mt-3 text-body-sm text-fg-subtle">
+          {total} {total === 1 ? "série" : "séries"}
+        </p>
+      ) : null}
 
       <div className="mt-4 lg:mt-6">
-        {results.length === 0 ? (
-          <EmptyState kind="no-content" description="Tente outro nome." />
-        ) : (
+        {state === "loading" ? (
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-3">
-            {results.map((serie) => (
-              <SeriesRow
-                key={serie.id}
-                id={serie.id}
-                title={serie.title}
-                carCount={carCountBySerie(serie.id)}
-                ownedCount={ownedCountBySerie(serie.id, collection.quantities)}
-                featured={serie.isDefault}
-              />
+            {Array.from({ length: 8 }, (_, i) => (
+              <SeriesRowSkeleton key={i} />
             ))}
           </div>
+        ) : state === "error" ? (
+          <ErrorState onRetry={reload} />
+        ) : items.length === 0 ? (
+          <EmptyState kind="no-content" description={searching ? "Tente outro nome." : undefined} />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-3">
+              {items.map((serie) => (
+                <SeriesRow key={serie.id} id={serie.id} title={serie.title} carCount={serie.carCount} ownedCount={serie.owned} featured={serie.isDefault} />
+              ))}
+            </div>
+            <LoadMore hasMore={hasMore} loading={loadingMore} error={moreError} onLoadMore={loadMore} />
+          </>
         )}
       </div>
     </div>

@@ -9,7 +9,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
 import { Input, PasswordInput } from "@/components/ui/input";
-import { account, AppwriteException, appwriteErrorInfo, ID } from "@/lib/appwrite";
+import { account, AppwriteException, appwriteErrorInfo, uuidV4 } from "@/lib/appwrite";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { SITE_URL } from "@/lib/env";
 import { useGuestOnly } from "../use-guest-only";
@@ -79,6 +80,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
 
 function CadastroForm() {
   const router = useRouter();
+  const { reload } = useAuth();
   const [error, setError] = useState<RegisterError | null>(null);
   const {
     register,
@@ -93,9 +95,10 @@ function CadastroForm() {
     setError(null);
     const trimmedEmail = values.email.trim().toLowerCase();
     try {
-      await account.create({ userId: ID.unique(), email: trimmedEmail, password: values.password, name: values.name.trim() });
+      await account.create({ userId: uuidV4(), email: trimmedEmail, password: values.password, name: values.name.trim() });
       await account.createEmailPasswordSession({ email: trimmedEmail, password: values.password });
-      router.push("/boas-vindas");
+      reload();
+      router.push("/");
     } catch (err) {
       const mapped = mapError(err);
       if (mapped === "email_in_use") {

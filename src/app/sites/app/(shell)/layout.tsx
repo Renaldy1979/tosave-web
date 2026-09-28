@@ -1,17 +1,91 @@
-import { AppShell } from "@/components/app/app-shell";
-import { Toaster } from "@/components/ui/toaster";
-import { CollectionStoreProvider } from "../_mock/collection-store";
+"use client";
 
-/**
- * Casca das telas do colecionador (lote 5a, fase A). Sem checagem de
- * sessão: a fase A libera as rotas sem login para validar o visual
- * (docs/briefings/app-web-lote5.md); a fase B entra com a guarda real.
- */
-export default function AppShellLayout({ children }: LayoutProps<"/sites/app">) {
+import { ShieldX } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { AppShell } from "@/components/app/app-shell";
+import { Button } from "@/components/ui/button";
+import { ErrorState, Skeleton } from "@/components/ui/feedback";
+import { Logo } from "@/components/ui/logo";
+import { Toaster } from "@/components/ui/toaster";
+import { CollectionSummaryProvider } from "@/lib/collection-summary";
+import { useAuth } from "@/lib/auth";
+
+function ShellSkeleton() {
   return (
-    <CollectionStoreProvider>
+    <div aria-busy="true" className="min-h-dvh lg:pl-62">
+      <div className="fixed inset-y-0 left-0 hidden w-62 border-r border-border bg-surface p-5 lg:block">
+        <Skeleton className="h-8 w-32" />
+        <div className="mt-10 space-y-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <Skeleton key={i} className="h-10" />
+          ))}
+        </div>
+      </div>
+      <div className="ink h-14 lg:hidden" />
+      <div className="mx-auto max-w-[1280px] space-y-4 px-4 py-6 md:px-8 md:py-8">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-5 w-72" />
+      </div>
+    </div>
+  );
+}
+
+function CenteredCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 py-10">
+      <Logo size="md" />
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface p-6 text-center shadow-card md:p-8">{children}</div>
+    </div>
+  );
+}
+
+/** Casca das telas do colecionador: exige sessão ativa (`GET /v2/me`). */
+export default function AppShellLayout({ children }: LayoutProps<"/sites/app">) {
+  const { state, signOut, reload } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (state.status !== "signed-out") return;
+    const params = new URLSearchParams();
+    if (pathname && pathname !== "/") params.set("next", pathname);
+    if (state.reason === "expired") params.set("expired", "1");
+    const qs = params.toString();
+    router.replace(`/entrar${qs ? `?${qs}` : ""}`);
+  }, [state, pathname, router]);
+
+  if (state.status === "loading" || state.status === "signed-out") return <ShellSkeleton />;
+
+  if (state.status === "error") {
+    return (
+      <CenteredCard>
+        <ErrorState compact message={state.message} onRetry={reload} />
+      </CenteredCard>
+    );
+  }
+
+  if (state.status === "forbidden") {
+    return (
+      <CenteredCard>
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-flame-soft text-flame">
+          <ShieldX size={26} strokeWidth={1.75} aria-hidden />
+        </div>
+        <h1 className="text-h2 text-fg">Conta desativada</h1>
+        <p className="mt-2 text-body text-fg-muted">
+          A conta <strong className="text-fg">{state.me.email}</strong> está bloqueada.
+        </p>
+        <Button variant="secondary" className="mt-6" fullWidth onClick={() => void signOut()}>
+          Entrar com outra conta
+        </Button>
+      </CenteredCard>
+    );
+  }
+
+  return (
+    <CollectionSummaryProvider>
       <AppShell>{children}</AppShell>
       <Toaster />
-    </CollectionStoreProvider>
+    </CollectionSummaryProvider>
   );
 }

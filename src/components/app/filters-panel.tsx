@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 import { NativeSelect } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
-import { MOCK_ATTRIBUTES, MOCK_BRANDS, MOCK_SERIES } from "@/app/sites/app/_mock/data";
-import { ALL_YEARS, type CarFilters } from "@/app/sites/app/_mock/filter";
+import type { Attribute, Brand, Serie } from "@/lib/app-types";
+import type { CarFilters } from "@/lib/app-catalog";
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
@@ -26,19 +26,30 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 export function FiltersPanel({
   filters,
   onChange,
+  series,
+  brands,
+  years,
+  attributes,
   className,
 }: {
   filters: CarFilters;
   onChange: (next: CarFilters) => void;
+  series: Serie[];
+  brands: Brand[];
+  years: number[];
+  attributes: Attribute[];
   className?: string;
 }) {
+  const filterYears = filters.years ?? [];
+  const filterAttrs = filters.attributeIds ?? [];
+
   const toggleYear = (year: number) =>
-    onChange({ ...filters, years: filters.years.includes(year) ? filters.years.filter((y) => y !== year) : [...filters.years, year] });
+    onChange({ ...filters, years: filterYears.includes(year) ? filterYears.filter((y) => y !== year) : [...filterYears, year] });
 
   const toggleAttr = (id: string) =>
     onChange({
       ...filters,
-      attributeIds: filters.attributeIds.includes(id) ? filters.attributeIds.filter((a) => a !== id) : [...filters.attributeIds, id],
+      attributeIds: filterAttrs.includes(id) ? filterAttrs.filter((a) => a !== id) : [...filterAttrs, id],
     });
 
   return (
@@ -47,7 +58,7 @@ export function FiltersPanel({
         <p className="mb-2 text-body-sm font-medium text-fg">Série</p>
         <NativeSelect value={filters.serieId ?? ""} onChange={(e) => onChange({ ...filters, serieId: e.target.value || null })}>
           <option value="">Todas as séries</option>
-          {MOCK_SERIES.map((s) => (
+          {series.map((s) => (
             <option key={s.id} value={s.id}>
               {s.title}
             </option>
@@ -59,7 +70,7 @@ export function FiltersPanel({
         <p className="mb-2 text-body-sm font-medium text-fg">Marca</p>
         <NativeSelect value={filters.brandId ?? ""} onChange={(e) => onChange({ ...filters, brandId: e.target.value || null })}>
           <option value="">Todas as marcas</option>
-          {MOCK_BRANDS.map((b) => (
+          {brands.map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
             </option>
@@ -70,8 +81,8 @@ export function FiltersPanel({
       <div>
         <p className="mb-2 text-body-sm font-medium text-fg">Ano</p>
         <div className="flex flex-wrap gap-1.5">
-          {ALL_YEARS.map((year) => (
-            <Chip key={year} active={filters.years.includes(year)} onClick={() => toggleYear(year)}>
+          {years.map((year) => (
+            <Chip key={year} active={filterYears.includes(year)} onClick={() => toggleYear(year)}>
               {year}
             </Chip>
           ))}
@@ -81,8 +92,8 @@ export function FiltersPanel({
       <div>
         <p className="mb-2 text-body-sm font-medium text-fg">Atributos</p>
         <div className="flex flex-wrap gap-1.5">
-          {MOCK_ATTRIBUTES.map((attr) => (
-            <Chip key={attr.id} active={filters.attributeIds.includes(attr.id)} onClick={() => toggleAttr(attr.id)}>
+          {attributes.map((attr) => (
+            <Chip key={attr.id} active={filterAttrs.includes(attr.id)} onClick={() => toggleAttr(attr.id)}>
               {attr.title}
             </Chip>
           ))}

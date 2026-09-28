@@ -2,48 +2,69 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { Search as SearchIcon, SlidersHorizontal, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import { CarCard } from "@/components/app/car-card";
+import { useEffect, useMemo, useState } from "react";
+import { CarCard, CarGridSkeleton } from "@/components/app/car-card";
 import { FiltersPanel } from "@/components/app/filters-panel";
+import { LoadMore } from "@/components/app/load-more";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/feedback";
+import { EmptyState, ErrorState } from "@/components/ui/feedback";
 import { fieldClass } from "@/components/ui/input";
-import { MOCK_BRANDS, MOCK_CARS, MOCK_SERIES } from "../../_mock/data";
-import { useCollectionStore } from "../../_mock/collection-store";
-import { EMPTY_FILTERS, filterCars, hasActiveFilter, type CarFilters } from "../../_mock/filter";
+import { listAllSeries, listBrands, listAttributes, listCars, listYears, type CarFilters } from "@/lib/app-catalog";
+import { useCollectionMutations } from "@/lib/collection-summary";
+import type { Attribute, Brand, Serie } from "@/lib/app-types";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
+import { useInfiniteList } from "@/lib/use-infinite-list";
 
-function activeChips(filters: CarFilters, onRemove: (next: CarFilters) => void) {
+const EMPTY_FILTERS: CarFilters = { q: "", years: [], serieId: null, brandId: null, attributeIds: [] };
+const PAGE_SIZE = 20;
+
+type Options = { series: Serie[]; brands: Brand[]; attributes: Attribute[]; years: number[] };
+
+function activeChips(filters: CarFilters, options: Options, onRemove: (next: CarFilters) => void) {
   const chips: { key: string; label: string; onRemove: () => void }[] = [];
   if (filters.serieId) {
-    const title = MOCK_SERIES.find((s) => s.id === filters.serieId)?.title ?? "—";
+    const title = options.series.find((s) => s.id === filters.serieId)?.title ?? "—";
     chips.push({ key: "serie", label: `Série: ${title}`, onRemove: () => onRemove({ ...filters, serieId: null }) });
   }
   if (filters.brandId) {
-    const name = MOCK_BRANDS.find((b) => b.id === filters.brandId)?.name ?? "—";
+    const name = options.brands.find((b) => b.id === filters.brandId)?.name ?? "—";
     chips.push({ key: "brand", label: `Marca: ${name}`, onRemove: () => onRemove({ ...filters, brandId: null }) });
   }
-  filters.years.forEach((year) =>
-    chips.push({ key: `year-${year}`, label: `Ano: ${year}`, onRemove: () => onRemove({ ...filters, years: filters.years.filter((y) => y !== year) }) })
+  (filters.years ?? []).forEach((year) =>
+    chips.push({ key: `year-${year}`, label: `Ano: ${year}`, onRemove: () => onRemove({ ...filters, years: (filters.years ?? []).filter((y) => y !== year) }) })
   );
-  if (filters.attributeIds.length) {
-    chips.push({
-      key: "attr",
-      label: `Atributos · ${filters.attributeIds.length}`,
-      onRemove: () => onRemove({ ...filters, attributeIds: [] }),
-    });
+  if (filters.attributeIds && filters.attributeIds.length > 0) {
+    chips.push({ key: "attr", label: `Atributos · ${filters.attributeIds.length}`, onRemove: () => onRemove({ ...filters, attributeIds: [] }) });
   }
   return chips;
+}
+
+function hasActiveFilter(filters: CarFilters): boolean {
+  return Boolean(filters.q?.trim() || filters.years?.length || filters.serieId || filters.brandId || filters.attributeIds?.length);
 }
 
 export function BuscarView() {
   const [filters, setFilters] = useState<CarFilters>(EMPTY_FILTERS);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const collection = useCollectionStore();
+  const { toggle } = useCollectionMutations();
+  const search = useDebouncedValue(filters.q ?? "", 300);
 
-  const results = useMemo(() => filterCars(MOCK_CARS, filters), [filters]);
-  const chips = activeChips(filters, setFilters);
-  const activeCount = filters.years.length + (filters.serieId ? 1 : 0) + (filters.brandId ? 1 : 0) + filters.attributeIds.length;
+  const [options, setOptions] = useState<Options>({ series: [], brands: [], attributes: [], years: [] });
+  useEffect(() => {
+    Promise.all([listAllSeries(), listBrands(), listAttributes(), listYears()])
+      .then(([series, brands, attributes, years]) => setOptions({ series, brands, attributes, years }))
+      .catch(() => undefined);
+  }, []);
+
+  const filterKey = JSON.stringify({ ...filters, q: search });
+  const { items: results, setItems: setResults, state, hasMore, loadingMore, moreError, loadMore, reload } = useInfiniteList(
+    filterKey,
+    (cursor, signal) => listCars({ ...filters, q: search }, cursor, PAGE_SIZE, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor }))
+  );
+
+  const chips = useMemo(() => activeChips(filters, options, setFilters), [filters, options]);
+  const activeCount = (filters.years?.length ?? 0) + (filters.serieId ? 1 : 0) + (filters.brandId ? 1 : 0) + (filters.attributeIds?.length ?? 0);
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-8">
@@ -88,11 +109,11 @@ export function BuscarView() {
                 </Dialog.Close>
               </div>
               <div className="px-5 py-5">
-                <FiltersPanel filters={filters} onChange={setFilters} />
+                <FiltersPanel filters={filters} onChange={setFilters} series={options.series} brands={options.brands} years={options.years} attributes={options.attributes} />
               </div>
               <div className="sticky bottom-0 border-t border-border bg-surface p-4">
                 <Button fullWidth onClick={() => setSheetOpen(false)}>
-                  Ver {results.length} {results.length === 1 ? "resultado" : "resultados"}
+                  Ver resultados
                 </Button>
               </div>
             </Dialog.Content>
@@ -130,15 +151,21 @@ export function BuscarView() {
                 className={`${fieldClass} pl-10`}
               />
             </div>
-            <FiltersPanel filters={filters} onChange={setFilters} />
+            <FiltersPanel filters={filters} onChange={setFilters} series={options.series} brands={options.brands} years={options.years} attributes={options.attributes} />
           </div>
         </aside>
 
         <div>
-          <p className="mb-4 text-body-sm text-fg-subtle">
-            {results.length} {results.length === 1 ? "miniatura" : "miniaturas"}
-          </p>
-          {results.length === 0 ? (
+          {state === "ok" ? (
+            <p className="mb-4 text-body-sm text-fg-subtle">
+              {results.length} {results.length === 1 ? "miniatura" : "miniaturas"}
+            </p>
+          ) : null}
+          {state === "loading" ? (
+            <CarGridSkeleton />
+          ) : state === "error" ? (
+            <ErrorState onRetry={reload} />
+          ) : results.length === 0 ? (
             <EmptyState
               kind="no-cars"
               description="Tente outro termo ou limpe os filtros."
@@ -151,17 +178,22 @@ export function BuscarView() {
               }
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
-              {results.map((car, i) => (
-                <CarCard
-                  key={car.id}
-                  car={car}
-                  priority={i < 4}
-                  isFavorite={collection.quantityOf(car.id) > 0}
-                  onToggleFavorite={() => collection.toggle(car.id)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
+                {results.map((car, i) => (
+                  <CarCard
+                    key={car.id}
+                    car={car}
+                    priority={i < 4}
+                    isFavorite={car.quantity > 0}
+                    onToggleFavorite={() =>
+                      toggle(car.id, car.quantity, (q) => setResults((prev) => prev.map((c) => (c.id === car.id ? { ...c, quantity: q, owned: q > 0 } : c))))
+                    }
+                  />
+                ))}
+              </div>
+              <LoadMore hasMore={hasMore} loading={loadingMore} error={moreError} onLoadMore={loadMore} />
+            </>
           )}
         </div>
       </div>

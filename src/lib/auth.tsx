@@ -11,6 +11,7 @@ export type Me = {
   email: string;
   role: "user" | "admin";
   status: "active" | "blocked";
+  phone: string | null;
 };
 
 export type AuthState =
@@ -31,7 +32,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function loadMe(): Promise<AuthState> {
+async function loadMe(requireAdmin: boolean): Promise<AuthState> {
   try {
     await account.get();
   } catch (err) {
@@ -44,7 +45,8 @@ async function loadMe(): Promise<AuthState> {
   }
   try {
     const me = await api<Me>("/v2/me");
-    if (me.role === "admin" && me.status === "active") return { status: "ready", me };
+    const ready = me.status === "active" && (!requireAdmin || me.role === "admin");
+    if (ready) return { status: "ready", me };
     return { status: "forbidden", me };
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) return { status: "signed-out", reason: "expired" };
@@ -66,17 +68,17 @@ function mapSignInError(err: unknown): SignInError {
   return "unknown";
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, requireAdmin = true }: { children: ReactNode; requireAdmin?: boolean }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
   const reload = useCallback(() => {
     setState({ status: "loading" });
-    loadMe().then(setState);
-  }, []);
+    loadMe(requireAdmin).then(setState);
+  }, [requireAdmin]);
 
   useEffect(() => {
     let alive = true;
-    loadMe().then((s) => {
+    loadMe(requireAdmin).then((s) => {
       if (alive) setState(s);
     });
     setOnUnauthorized(() => setState({ status: "signed-out", reason: "expired" }));
@@ -84,23 +86,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       alive = false;
       setOnUnauthorized(null);
     };
-  }, []);
+  }, [requireAdmin]);
 
-  const signIn = useCallback<AuthContextValue["signIn"]>(async (email, password) => {
-    clearJwt();
-    try {
-      await account.createEmailPasswordSession({ email: email.trim().toLowerCase(), password });
-    } catch (err) {
-      if (appwriteErrorInfo(err).type !== "user_session_already_exists") {
-        return { ok: false, error: mapSignInError(err) };
+  const signIn = useCallback<AuthContextValue["signIn"]>(
+    async (email, password) => {
+      clearJwt();
+      try {
+        await account.createEmailPasswordSession({ email: email.trim().toLowerCase(), password });
+      } catch (err) {
+        if (appwriteErrorInfo(err).type !== "user_session_already_exists") {
+          return { ok: false, error: mapSignInError(err) };
+        }
       }
-    }
-    const next = await loadMe();
-    if (next.status === "error") return { ok: false, error: "network" };
-    if (next.status === "signed-out") return { ok: false, error: "unknown" };
-    setState(next);
-    return { ok: true };
-  }, []);
+      const next = await loadMe(requireAdmin);
+      if (next.status === "error") return { ok: false, error: "network" };
+      if (next.status === "signed-out") return { ok: false, error: "unknown" };
+      setState(next);
+      return { ok: true };
+    },
+    [requireAdmin]
+  );
 
   const signOut = useCallback(async () => {
     try {
