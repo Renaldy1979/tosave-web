@@ -1,13 +1,15 @@
-import { ChevronRight, Layers } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
+import { SerieLogo } from "./serie-logo";
 
 /** Card de série do carrossel "Séries em destaque" (Home). */
 export function SeriesCard({
   id,
   title,
   description,
+  imageFileId = null,
   carCount,
   ownedCount,
   featured,
@@ -16,6 +18,7 @@ export function SeriesCard({
   id: string;
   title: string;
   description: string;
+  imageFileId?: string | null;
   carCount: number;
   ownedCount: number;
   featured?: boolean;
@@ -30,8 +33,8 @@ export function SeriesCard({
         className
       )}
     >
-      <div className="relative flex h-24 items-center justify-center bg-card-stage">
-        <Layers size={32} strokeWidth={1.5} className="text-fg-subtle/40" aria-hidden />
+      <div className="relative h-24">
+        <SerieLogo fileId={imageFileId} alt="" className="h-full" />
         {featured ? (
           <Badge variant="flame" size="sm" className="absolute top-2 left-2">
             Em destaque
@@ -56,12 +59,14 @@ export function SeriesCard({
 export function SeriesRow({
   id,
   title,
+  imageFileId = null,
   carCount,
   ownedCount,
   featured,
 }: {
   id: string;
   title: string;
+  imageFileId?: string | null;
   carCount: number;
   ownedCount: number;
   featured?: boolean;
@@ -72,9 +77,7 @@ export function SeriesRow({
       href={`/series/${id}`}
       className="group flex items-center gap-3 rounded-lg border border-border bg-surface p-3 transition duration-fast hover:border-primary/40 hover:bg-surface-3/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div className="flex size-14 shrink-0 items-center justify-center rounded-md bg-card-stage">
-        <Layers size={22} strokeWidth={1.5} className="text-fg-subtle/40" aria-hidden />
-      </div>
+      <SerieLogo fileId={imageFileId} alt="" iconSize={22} className="size-14 shrink-0 rounded-md" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <h3 className="truncate text-body font-semibold text-fg">{title}</h3>

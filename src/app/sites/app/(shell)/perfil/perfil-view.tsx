@@ -268,10 +268,16 @@ function EditProfileSheet({
       title="Editar perfil"
       footer={
         <div className="flex gap-2">
-          <Button variant="ghost" fullWidth onClick={onClose} disabled={saving}>
+          <Button variant="ghost" fullWidth className="flex-1" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth disabled={!dirty || !draftName.trim() || !draftEmail.trim() || saving} loading={saving} onClick={() => void handleSave()}>
+          <Button
+            fullWidth
+            className="flex-1"
+            disabled={!dirty || !draftName.trim() || !draftEmail.trim() || saving}
+            loading={saving}
+            onClick={() => void handleSave()}
+          >
             Salvar
           </Button>
         </div>
@@ -293,11 +299,12 @@ function PhoneSheet({ open, onClose, phone, onSave }: { open: boolean; onClose: 
       title="Telefone (WhatsApp)"
       footer={
         <div className="flex gap-2">
-          <Button variant="ghost" fullWidth onClick={onClose} disabled={saving}>
+          <Button variant="ghost" fullWidth className="flex-1" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
           <Button
             fullWidth
+            className="flex-1"
             loading={saving}
             onClick={async () => {
               setSaving(true);
@@ -370,10 +377,10 @@ function PasswordSheet({ open, onClose, onSaved }: { open: boolean; onClose: () 
       title="Alterar senha"
       footer={
         <div className="flex gap-2">
-          <Button variant="ghost" fullWidth onClick={onClose} disabled={saving}>
+          <Button variant="ghost" fullWidth className="flex-1" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth disabled={!valid || saving} loading={saving} onClick={() => void handleSave()}>
+          <Button fullWidth className="flex-1" disabled={!valid || saving} loading={saving} onClick={() => void handleSave()}>
             Salvar
           </Button>
         </div>

@@ -70,6 +70,12 @@ export type ApiRequest = {
   /** Rota pública (sem JWT), ex.: `/v2/config`. */
   auth?: boolean;
   signal?: AbortSignal;
+  /**
+   * 401 depois de renovar o JWT: `"session"` (padrão) encerra a sessão e
+   * leva a `/entrar`; `"return"` só devolve o erro (ex.: senha errada na
+   * exclusão de conta, que também é 401 mas não é sessão morta).
+   */
+  on401?: "session" | "return";
 };
 
 function buildUrl(path: string, query?: Query): string {
@@ -141,7 +147,7 @@ export async function api<T>(path: string, req: ApiRequest = {}): Promise<T> {
   } catch {
     // corpo sem JSON: fica a mensagem genérica.
   }
-  if (res.status === 401 && needsAuth) {
+  if (res.status === 401 && needsAuth && (req.on401 ?? "session") === "session") {
     clearJwt();
     onUnauthorized?.();
   }

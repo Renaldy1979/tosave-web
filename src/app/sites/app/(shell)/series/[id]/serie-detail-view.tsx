@@ -1,9 +1,9 @@
 "use client";
 
-import { Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CarCard, CarGridSkeleton } from "@/components/app/car-card";
 import { LoadMore } from "@/components/app/load-more";
+import { SerieLogo } from "@/components/app/serie-logo";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, ErrorState } from "@/components/ui/feedback";
@@ -53,6 +53,25 @@ export function SerieDetailView({ id }: { id: string }) {
     getSerieCars(id, FILTER_API[filtro], cursor, PAGE_SIZE, signal).then((page) => ({ items: page.items, nextCursor: page.nextCursor, extra: page.counts }))
   );
 
+  // As contagens do cabeçalho vêm do servidor a cada página; os toques do
+  // usuário ajustam por cima na hora, sem esperar recarregar (mesma ideia
+  // do resumo global da tela Coleção, atualizado a cada mutação).
+  const [localCounts, setLocalCounts] = useState<Counts>(ZERO_COUNTS);
+  useEffect(() => {
+    if (counts) setLocalCounts(counts);
+  }, [counts]);
+
+  const handleToggle = (carId: string, quantity: number) => {
+    const wasOwned = quantity > 0;
+    toggle(carId, quantity, (q) => {
+      setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, quantity: q, owned: q > 0 } : c)));
+      const nowOwned = q > 0;
+      if (wasOwned !== nowOwned) {
+        setLocalCounts((c) => ({ total: c.total, owned: c.owned + (nowOwned ? 1 : -1), missing: c.missing + (nowOwned ? -1 : 1) }));
+      }
+    });
+  };
+
   if (serieState === "not-found") {
     return (
       <div className="mx-auto max-w-[1440px] px-4 py-16 sm:px-5 md:px-6 lg:px-8">
@@ -84,7 +103,7 @@ export function SerieDetailView({ id }: { id: string }) {
     );
   }
 
-  const { total, owned, missing } = counts ?? ZERO_COUNTS;
+  const { total, owned, missing } = localCounts;
   const complete = total > 0 && owned === total;
   const percent = total > 0 ? Math.round((owned / total) * 100) : 0;
 
@@ -100,9 +119,7 @@ export function SerieDetailView({ id }: { id: string }) {
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-5 md:px-6 lg:px-8 lg:py-8">
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="flex size-24 items-center justify-center rounded-full bg-card-stage">
-          <Layers size={32} strokeWidth={1.5} className="text-fg-subtle/40" aria-hidden />
-        </div>
+        <SerieLogo fileId={serie.imageFileId} alt="" className="size-24 rounded-full" />
         <h1 className="font-display text-h1 text-fg">{serie.title}</h1>
         {serie.description ? <p className="max-w-md text-body-sm text-fg-muted">{serie.description}</p> : null}
 
@@ -161,14 +178,7 @@ export function SerieDetailView({ id }: { id: string }) {
           <>
             <div className="grid grid-cols-2 gap-3 xs:grid-cols-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-5">
               {cars.map((car) => (
-                <CarCard
-                  key={car.id}
-                  car={car}
-                  isFavorite={car.quantity > 0}
-                  onToggleFavorite={() =>
-                    toggle(car.id, car.quantity, (q) => setCars((prev) => prev.map((c) => (c.id === car.id ? { ...c, quantity: q, owned: q > 0 } : c))))
-                  }
-                />
+                <CarCard key={car.id} car={car} isFavorite={car.quantity > 0} onToggleFavorite={() => handleToggle(car.id, car.quantity)} />
               ))}
             </div>
             <LoadMore hasMore={hasMore} loading={loadingMore} error={moreError} onLoadMore={loadMore} />

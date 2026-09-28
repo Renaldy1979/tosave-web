@@ -65,7 +65,15 @@ export function SeriesView() {
           <>
             <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-3">
               {items.map((serie) => (
-                <SeriesRow key={serie.id} id={serie.id} title={serie.title} carCount={serie.carCount} ownedCount={serie.owned} featured={serie.isDefault} />
+                <SeriesRow
+                  key={serie.id}
+                  id={serie.id}
+                  title={serie.title}
+                  imageFileId={serie.imageFileId}
+                  carCount={serie.carCount}
+                  ownedCount={serie.owned}
+                  featured={serie.isDefault}
+                />
               ))}
             </div>
             <LoadMore hasMore={hasMore} loading={loadingMore} error={moreError} onLoadMore={loadMore} />

@@ -93,7 +93,15 @@ export function HomeView() {
                 <div className="-mx-4 flex min-w-0 gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" style={{ scrollSnapType: "x mandatory" }}>
                   {featuredSeries.map((serie) => (
                     <div key={serie.id} style={{ scrollSnapAlign: "start" }}>
-                      <SeriesCard id={serie.id} title={serie.title} description={serie.description} carCount={serie.carCount} ownedCount={serie.owned} featured />
+                      <SeriesCard
+                        id={serie.id}
+                        title={serie.title}
+                        description={serie.description}
+                        imageFileId={serie.imageFileId}
+                        carCount={serie.carCount}
+                        ownedCount={serie.owned}
+                        featured
+                      />
                     </div>
                   ))}
                 </div>
