@@ -92,6 +92,11 @@ function EntrarForm() {
         error={errors.password?.message}
         {...register("password")}
       />
+      <p className="-mt-3 text-right">
+        <Link href="/recuperar-senha" className="text-body-sm font-medium text-primary-text hover:underline">
+          Esqueci minha senha
+        </Link>
+      </p>
 
       {error ? <Alert>{ERROR_TEXT[error]}</Alert> : null}
 
