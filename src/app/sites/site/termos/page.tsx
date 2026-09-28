@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { LegalPage, type LegalSection } from "@/components/site/legal-page";
 import { loadPublicConfig, type PublicConfig } from "@/lib/public-api";
 
+// Renderiza a cada visita: o e-mail de suporte vem das Configurações do painel (o ISR não renovava no container).
+export const dynamic = "force-dynamic";
+
 const TITLE = "Termos de Uso";
 const DESCRIPTION = "As regras de uso do ToSave: conta, coleção, Clube da Troca e conteúdo do usuário.";
 const UPDATED_AT = "28 de setembro de 2026";
@@ -15,7 +18,7 @@ export const metadata: Metadata = {
 
 async function loadSupportEmail(): Promise<string> {
   try {
-    const config = await loadPublicConfig({ revalidate: 300 });
+    const config = await loadPublicConfig({ revalidate: 0 });
     return (config as PublicConfig).supportEmail || "";
   } catch {
     return "";
