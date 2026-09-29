@@ -74,10 +74,32 @@ export type AdminUser = {
   email: string;
   role: "user" | "admin";
   status: "active" | "blocked";
+  emailVerified: boolean;
   phoneNumber: string | null;
   collectionModels: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AdminUserSession = {
+  id: string;
+  device: string | null;
+  client: string | null;
+  os: string | null;
+  ip: string;
+  country: string | null;
+  current: boolean;
+  expiresAt: string;
+};
+
+export type AdminUserLog = {
+  event: string;
+  ip: string;
+  device: string | null;
+  client: string | null;
+  os: string | null;
+  country: string | null;
+  createdAt: string;
 };
 
 export type AdminConfig = {

@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { BadgeCheck, ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pager } from "@/components/admin/pager";
@@ -209,20 +210,26 @@ function UserRow({
   const title = isSelf ? "Você não pode alterar a própria conta aqui." : undefined;
   return (
     <li className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-card sm:flex-row sm:items-center">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <Link
+        href={`/settings/users/${user.id}`}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-body-sm font-bold text-primary-text">
           {initials(user.name || user.email)}
         </span>
         <div className="min-w-0">
-          <p className="flex items-center gap-1.5 truncate font-semibold text-fg">
+          <p className="flex items-center gap-1.5 truncate font-semibold text-fg hover:underline">
             {user.name || "—"}
             {isSelf ? (
               <span className="inline-flex h-5 shrink-0 items-center rounded-xs bg-surface-3 px-1.5 text-[11px] font-medium text-fg-muted">Você</span>
             ) : null}
+            {user.emailVerified ? (
+              <BadgeCheck size={14} strokeWidth={1.75} className="shrink-0 text-primary" aria-label="E-mail verificado" />
+            ) : null}
           </p>
           <p className="truncate text-body-sm text-fg-subtle">{user.email}</p>
         </div>
-      </div>
+      </Link>
       <div className="flex items-center gap-2">
         <RoleSelect label={`Papel de ${user.name}`} title={title} disabled={disabled} value={user.role} onChange={onRoleChange} />
         <NativeSelect
