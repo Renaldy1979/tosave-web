@@ -38,8 +38,8 @@ export default async function TermosPage() {
           <p>
             Seja bem-vindo ao ToSave, a comunidade de colecionadores de miniaturas em escala 1:64 (Hot Wheels,
             Matchbox e afins). O ToSave é oferecido por{" "}
-            <strong>[A DEFINIR: razão social ou nome do responsável]</strong> (
-            <strong>[A DEFINIR: CNPJ ou CPF]</strong>), doravante &quot;ToSave&quot;, nos endereços{" "}
+            <strong>Renaldy Pereira Sousa</strong> (
+            <strong>CPF 088.244.597-90</strong>), doravante &quot;ToSave&quot;, nos endereços{" "}
             <strong>tosave.cloud</strong> e <strong>app.tosave.cloud</strong>, e pelo aplicativo para celular.
           </p>
           <p>
@@ -234,7 +234,7 @@ function buildSections(supportEmail: string): LegalSection[] {
           O ToSave pode conter links para sites externos. Apesar de só criarmos links para sites de confiança, o
           ToSave não tem responsabilidade sobre o conteúdo ou as práticas desses sites externos, sendo o usuário
           responsável pelo acesso a eles. Em caso de conflito judicial entre o usuário e o ToSave, fica eleito o foro
-          da comarca de <strong>[A DEFINIR: cidade do foro]</strong>, mesmo que outro seja mais privilegiado.
+          da comarca de <strong>Leopoldina, Minas Gerais</strong>, mesmo que outro seja mais privilegiado.
         </p>
       ),
     },
